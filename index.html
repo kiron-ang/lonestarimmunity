@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lone Star Immunity</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             background-color: #1a1a1a;
@@ -35,7 +36,7 @@
 </head>
 <body>
     <h1>Lone Star Immunity</h1>
-    <p>Hover or focus on a star to see vaccination rates.</p>
+    <p>Hover over a star to see vaccination rates.</p>
     <svg width="800" height="600" aria-label="Visualization of vaccination coverage as a starfield"></svg>
     <div id="tooltip" class="tooltip" role="tooltip"></div>
 
@@ -43,30 +44,45 @@
         const width = 800, height = 600;
         const svg = d3.select("svg");
         const tooltip = d3.select("#tooltip");
+        const fileUrl = "https://raw.githubusercontent.com/kiron-ang/LoneStarImmunity/main/data.xlsx";
 
-        const schools = Array.from({ length: 100 }, (_, i) => ({
-            name: `School ${i + 1}`,
-            vaccinationRate: Math.random(),
-            x: Math.random() * width,
-            y: Math.random() * height
-        }));
-
-        svg.selectAll(".star")
-            .data(schools)
-            .enter().append("circle")
-            .attr("class", "star")
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y)
-            .attr("r", 4)
-            .attr("fill", d => d3.interpolateOranges(d.vaccinationRate))
-            .attr("tabindex", 0)
-            .on("mouseover focus", function (event, d) {
-                tooltip.style("display", "block")
-                    .html(`${d.name}: ${(d.vaccinationRate * 100).toFixed(1)}% vaccinated`)
-                    .style("left", `${event.pageX + 10}px`)
-                    .style("top", `${event.pageY - 10}px`);
+        fetch(fileUrl)
+            .then(response => response.arrayBuffer())
+            .then(data => {
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                processData(json);
             })
-            .on("mouseout blur", () => tooltip.style("display", "none"));
+            .catch(error => console.error("Error loading the file:", error));
+
+        function processData(data) {
+            const schools = data.map((d, i) => ({
+                name: d["Facility Name"] || `School ${i + 1}`,
+                vaccinationRate: parseFloat(d["MMR"] || 0),
+                x: Math.random() * width,
+                y: Math.random() * height
+            })).filter(d => !isNaN(d.vaccinationRate));
+
+            svg.selectAll(".star").remove();
+
+            svg.selectAll(".star")
+                .data(schools)
+                .enter().append("circle")
+                .attr("class", "star")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", 4)
+                .attr("fill", d => d3.interpolateOranges(d.vaccinationRate))
+                .attr("tabindex", 0)
+                .on("mouseover focus", function (event, d) {
+                    tooltip.style("display", "block")
+                        .html(`${d.name}: ${(d.vaccinationRate * 100).toFixed(1)}% vaccinated`)
+                        .style("left", `${event.pageX + 10}px`)
+                        .style("top", `${event.pageY - 10}px`);
+                })
+                .on("mouseout blur", () => tooltip.style("display", "none"));
+        }
     </script>
 </body>
 </html>
