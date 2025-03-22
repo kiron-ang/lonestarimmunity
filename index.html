@@ -192,9 +192,9 @@
                     .enter()
                     .append("rect")
                     .attr("x", (d, i) => i * barWidth)
-                    .attr("y", d => height - (d[selectedVaccine] * height))
+                    .attr("y", d => height - (d[selectedVaccine] / 2 * height))
                     .attr("width", barWidth)
-                    .attr("height", d => d[selectedVaccine] * height)
+                    .attr("height", d => d[selectedVaccine] / 2  * height)
                     .attr("fill", "#EF271B");
 
                 // Draw a line for herd immunity threshold
@@ -217,7 +217,7 @@
                             .style("visibility", "visible")
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px")
-                            .html(`Facility: ${d['Facility Name']}<br>${selectedVaccine} Vaccination Rate: ${(d[selectedVaccine]).toFixed(2)}%`);
+                            .html(`${d['Facility Name']}<br>${selectedVaccine} Seventh Grade Vaccination Rate: ${(d[selectedVaccine]).toFixed(2)}%`);
                     })
                     .on("mouseout", () => {
                         // Remove tooltips on mouse out
