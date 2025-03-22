@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
     <link rel="manifest" href="/site.webmanifest">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,9 +19,10 @@
             margin-bottom: 20px;
         }
         #chart-container {
-            display: none; /* Hide chart initially */
             display: flex;
             justify-content: center;
+            align-items: center; /* Optional: For vertical centering */
+            height: 100vh; /* Optional: Set the container height to the viewport height */
         }
         #selector-container {
             text-align: center;
@@ -90,12 +91,13 @@
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        const width = 800 - 20;
-        const height = 600 - 20;
+        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        const width = 800 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
 
         const svg = d3.select("#chart")
             .append("g")
-            .attr("transform", `translate(${width}, ${height})`);
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         let counties = [];
         d3.csv("data.csv").then(data => {
@@ -167,8 +169,6 @@
                             .selectAll(".tooltip")
                             .remove();
                     });
-
-                document.getElementById("chart-container").style.display = "block";
             });
         });
     </script>
