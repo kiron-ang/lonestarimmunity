@@ -1,173 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lone Star Immunity</title>
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #58A4B0;
-      color: #F5F0F6;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      text-align: center;
-      padding: 20px;
-    }
-    #selector-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #chart-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100vw;
-      height: 80vh; /* Ensures the SVG container has a height */
-    }
-    .tooltip {
-      position: absolute;
-      background-color: #58A4B0;
-      border: solid 1px;
-      border-radius: 5px;
-      padding: 5px;
-      color: #F5F0F6;
-      pointer-events: none;
-    }
-    select, button {
-      background-color: #58A4B0;
-      color: #F5F0F6;
-      border: none;
-      padding: 8px;
-      font-size: 16px;
-      margin: 5px;
-    }
-  </style>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lone Star Immunity</title>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #58A4B0;
+            color: #F5F0F6;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+        }
+        #selector-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 80vh;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #58A4B0;
+            border: solid 1px;
+            border-radius: 5px;
+            padding: 5px;
+            color: #F5F0F6;
+            pointer-events: none;
+        }
+        select, button {
+            background-color: #58A4B0;
+            color: #F5F0F6;
+            border: none;
+            padding: 8px;
+            font-size: 16px;
+            margin: 5px;
+        }
+    </style>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <h1>Lone Star Immunity</h1>
-    <h2>Look at School Vaccination Rates Among Texas Seventh Graders!</h2>
-    <p>This website uses data from the Texas Department of State Health Services; every school year,
-      they survey schools to get percentages on how many seventh graders are vaccinated.
-      Use the dropdown menus below to make bar charts for different counties and vaccines!
-      Click a bar to learn more about the school district that it represents.
-      The dotted line represents a vaccination rate of 85%. Note that herd immunity usually
-      needs 80% to 90% of people in a group to be vaccinated. Make as many bar charts as you want,
-      and contact Kiron Ang at kiron_ang1@baylor.edu for any questions, comments, or feedback!
-    </p>
-  </header>
-
-  <div id="selector-container">
-    <select id="county-select"></select>
-    <select id="vaccine-select">
-      <option value="MMR">MMR</option>
-      <option value="Polio">Polio</option>
-      <option value="Varicella">Varicella</option>
-      <option value="Hepatitis A">Hepatitis A</option>
-      <option value="Hepatitis B">Hepatitis B</option>
-      <option value="Tdap/Td" selected>Tdap/Td</option>
-      <option value="Meningococcal">Meningococcal</option>
-    </select>
-    <button id="showDataButton">Make a Chart!</button>
-  </div>
-
-  <div id="chart-container">
-    <svg id="chart" width="100%" height="100%"></svg>
-  </div>
-
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script>
-    const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-
-    // Select the SVG element and get its actual dimensions.
-    const svg = d3.select("#chart");
-    const svgRect = svg.node().getBoundingClientRect();
-    const svgWidth = svgRect.width;
-    const svgHeight = svgRect.height;
-
-    // Calculate chart dimensions.
-    const width = svgWidth - margin.left - margin.right;
-    const height = svgHeight - margin.top - margin.bottom;
-
-    // Append a group element to the SVG.
-    const chart = svg.append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
-    // Load CSV data.
-    d3.csv("data.csv").then(data => {
-      // Populate county select.
-      const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
-      const countySelect = document.getElementById("county-select");
-      uniqueCounties.forEach(county => {
-        const option = document.createElement("option");
-        option.text = county;
-        option.value = county;
-        countySelect.appendChild(option);
-      });
-
-      // On button click, draw the chart.
-      document.getElementById("showDataButton").addEventListener("click", () => {
-        const selectedCounty = countySelect.value;
-        const selectedVaccine = document.getElementById("vaccine-select").value;
-        const filteredData = data.filter(d => d.County === selectedCounty);
-        filteredData.forEach(d => { 
-          d[selectedVaccine] = parseFloat(d[selectedVaccine]) / 100; 
+    <header>
+        <h1>Lone Star Immunity</h1>
+        <h2>Look at School Vaccination Rates Among Texas Seventh Graders!</h2>
+        <p>This website uses data from the Texas Department of State Health Services; every school year,
+            they survey schools to get percentages on how many seventh graders are vaccinated.
+            Use the dropdown menus below to make bar charts for different counties and vaccines!
+            Click a bar to learn more about the school district that it represents.
+            The dotted line represents a vaccination rate of 85%. Note that herd immunity usually
+            needs 80% to 90% of people in a group to be vaccinated. Make as many bar charts as you want,
+            and contact Kiron Ang at kiron_ang1@baylor.edu for any questions, comments, or feedback!
+        </p>
+    </header>
+    
+    <div id="selector-container">
+        <select id="county-select"></select>
+        <select id="vaccine-select">
+            <option value="MMR">MMR</option>
+            <option value="Polio">Polio</option>
+            <option value="Varicella">Varicella</option>
+            <option value="Hepatitis A">Hepatitis A</option>
+            <option value="Hepatitis B">Hepatitis B</option>
+            <option value="Tdap/Td" selected>Tdap/Td</option>
+            <option value="Meningococcal">Meningococcal</option>
+        </select>
+        <button id="showDataButton">Make a Chart!</button>
+    </div>
+    
+    <div id="chart-container">
+        <svg id="chart" width="100%" height="100%"></svg>
+    </div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+        
+        // Get the SVG element and its actual pixel dimensions.
+        const svg = d3.select("#chart");
+        const svgRect = svg.node().getBoundingClientRect();
+        const svgWidth = svgRect.width;
+        const svgHeight = svgRect.height;
+        
+        // Calculate available chart dimensions.
+        const width = svgWidth - margin.left - margin.right;
+        const height = svgHeight - margin.top - margin.bottom;
+        
+        // Append the group element to the SVG.
+        const chart = svg.append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+        
+        // Load CSV data.
+        d3.csv("data.csv").then(data => {
+            // Populate the county select dropdown.
+            const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
+            const countySelect = document.getElementById("county-select");
+            uniqueCounties.forEach(county => {
+                const option = document.createElement("option");
+                option.text = county;
+                option.value = county;
+                countySelect.appendChild(option);
+            });
+            
+            // When the button is clicked, draw the chart.
+            document.getElementById("showDataButton").addEventListener("click", () => {
+                const selectedCounty = countySelect.value;
+                const selectedVaccine = document.getElementById("vaccine-select").value;
+                const filteredData = data.filter(d => d.County === selectedCounty);
+                
+                // Convert vaccine percentages from string to decimal.
+                filteredData.forEach(d => { 
+                    d[selectedVaccine] = parseFloat(d[selectedVaccine]) / 100; 
+                });
+                filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
+                
+                // Clear existing chart elements.
+                chart.selectAll("*").remove();
+                
+                const barWidth = width / filteredData.length;
+                
+                // Draw bars with combined event handlers for color change and tooltip.
+                chart.selectAll("rect")
+                .data(filteredData)
+                .enter()
+                .append("rect")
+                .attr("x", (d, i) => i * barWidth)
+                .attr("y", d => height - (d[selectedVaccine] * height))
+                .attr("width", barWidth)
+                .attr("height", d => d[selectedVaccine] * height)
+                .attr("fill", "#F5F0F6")
+                .on("mouseover", function(event, d) {
+                    // Change color.
+                    d3.select(this).attr("fill", "#EF271B");
+                    // Add tooltip.
+                    d3.select("body").append("div")
+                    .attr("class", "tooltip")
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px")
+                    .html(`${d['Facility Name']}<br>${selectedVaccine} Seventh Grade Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
+                })
+                .on("mouseout", function() {
+                    // Revert color.
+                    d3.select(this).attr("fill", "#F5F0F6");
+                    // Remove tooltip.
+                    d3.select("body").selectAll(".tooltip").remove();
+                });
+                
+                // Add a horizontal reference line at 85%.
+                chart.append("line")
+                .attr("x1", 0)
+                .attr("y1", height - (0.85 * height))
+                .attr("x2", width)
+                .attr("y2", height - (0.85 * height))
+                .attr("stroke", "#58A4B0")
+                .attr("stroke-dasharray", "5,5");
+            });
         });
-        filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
-
-        // Clear previous chart elements.
-        chart.selectAll("*").remove();
-
-        const barWidth = width / filteredData.length;
-
-        // Draw bars.
-        chart.selectAll("rect")
-          .data(filteredData)
-          .enter()
-          .append("rect")
-          .attr("x", (d, i) => i * barWidth)
-          .attr("y", d => height - (d[selectedVaccine] * height))
-          .attr("width", barWidth)
-          .attr("height", d => d[selectedVaccine] * height)
-          .attr("fill", "#F5F0F6")
-          .on("mouseover", function () {
-            d3.select(this).attr("fill", "#EF271B");
-          })
-          .on("mouseout", function () {
-            d3.select(this).attr("fill", "#F5F0F6");
-          });
-
-        // Add a horizontal reference line at 85%.
-        chart.append("line")
-          .attr("x1", 0)
-          .attr("y1", height - (0.85 * height))
-          .attr("x2", width)
-          .attr("y2", height - (0.85 * height))
-          .attr("stroke", "#58A4B0")
-          .attr("stroke-dasharray", "5,5");
-
-        // Add tooltips on hover.
-        chart.selectAll("rect")
-          .on("mouseover", (event, d) => {
-            d3.select("body").append("div")
-              .attr("class", "tooltip")
-              .style("left", (event.pageX + 10) + "px")
-              .style("top", (event.pageY - 28) + "px")
-              .html(`${d['Facility Name']}<br>${selectedVaccine} Seventh Grade Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
-          })
-          .on("mouseout", () => {
-            d3.select("body").selectAll(".tooltip").remove();
-          });
-      });
-    });
-  </script>
+    </script>
 </body>
 </html>
