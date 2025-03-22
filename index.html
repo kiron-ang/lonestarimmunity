@@ -1,21 +1,10 @@
 <!DOCTYPE html>
-<!-- Document type declaration -->
 <html lang="en">
-<!-- Root element of the HTML document, specifying English as the language -->
 <head>
-    <!-- Link to the favicon for the webpage -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    
-    <!-- Character encoding for the document -->
     <meta charset="UTF-8">
-    
-    <!-- Viewport settings for responsive design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Title of the webpage -->
     <title>Lone Star Immunity</title>
-    
-    <!-- Internal CSS styles for the webpage -->
     <style>
         /* Global styles for the body */
         body {
@@ -83,6 +72,9 @@
     <header>
         <h1>Lone Star Immunity</h1>
         <h2>Exploring Vaccination Rates Among Texas Seventh Graders!</h2>
+        <p>This application visualizes vaccination rates across Texas schools for various vaccines. 
+            The data is filtered by county and vaccine type, displaying the rates in a bar chart. 
+            Effective herd immunity typically requires vaccination rates above 80-90% for most vaccines.</p>
     </header>
     
     <!-- Container for selectors (county and vaccine) -->
@@ -112,10 +104,6 @@
         <!-- SVG element for the chart -->
         <svg id="chart" width="800" height="600"></svg>
     </div>
-
-    <p>This application visualizes vaccination rates across Texas schools for various vaccines. 
-        The data is filtered by county and vaccine type, displaying the rates in a bar chart. 
-        Effective herd immunity typically requires vaccination rates above 80-90% for most vaccines.</p>
 
     <!-- Import D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
