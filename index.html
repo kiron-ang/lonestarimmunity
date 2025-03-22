@@ -53,8 +53,7 @@
 <body>
     <header>
         <h1>Lone Star Immunity</h1>
-        <h2>How many seventh graders in your school are vaccinated?</h2>
-        <h3>A Web Application Created by Kiron Ang in March 2025</h3>
+        <h2>A web application created by Kiron Ang in March 2025</h2>
         <h4>
             Every school year, the Texas Department of State Health Services surveys schools to learn what percentage of seventh graders are vaccinated.
             This website allows you to explore data collected during the 2023-2024 academic school year.
@@ -68,13 +67,13 @@
     <div id="selector-container">
         <select id="county-select"></select>
         <select id="vaccine-select">
-            <option value="MMR">MMR</option>
-            <option value="Polio">Polio</option>
-            <option value="Varicella">Varicella</option>
             <option value="Hepatitis A">Hepatitis A</option>
             <option value="Hepatitis B">Hepatitis B</option>
-            <option value="Tdap/Td" selected>Tdap/Td</option>
             <option value="Meningococcal">Meningococcal</option>
+            <option value="MMR">MMR</option>
+            <option value="Polio">Polio</option>
+            <option value="Tdap/Td">Tdap/Td</option>
+            <option value="Varicella">Varicella</option>
         </select>
         <button id="showDataButton">Make a Chart!</button>
     </div>
@@ -123,9 +122,9 @@
                     const tooltip = d3.select("body").append("div")
                     .attr("class", "tooltip")
                     .html(`${d['Facility Name']}<br>${d['School Type']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
-                    let left = event.pageX + tooltip.node().offsetWidth;
+                    let left = event.pageX;
                     let top = event.pageY - tooltip.node().offsetHeight;
-                    if (left > window.innerWidth) {
+                    if (left + tooltip.node().offsetWidth > window.innerWidth) {
                         left = event.pageX - tooltip.node().offsetWidth;
                     }
                     tooltip.style("left", `${left}px`).style("top", `${top}px`);
