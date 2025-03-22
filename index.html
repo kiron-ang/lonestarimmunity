@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lone Star Immunity</title>
+    <style>
+        body {
+            background-color: black;
+            color: lightblue;
+        }
+        .node {
+            fill: lightblue;
+            stroke: white;
+        }
+        .link {
+            stroke: lightblue;
+            stroke-opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <svg width="800" height="600"></svg>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Load data
+        d3.csv('data.csv').then(data => {
+            // Convert percentages to float
+            for (const col of ['Tdap/Td', 'Meningococcal', 'Hepatitis A', 'Hepatitis B', 'MMR', 'Polio', 'Varicella']) {
+                data.forEach(d => d[col] = parseFloat(d[col].replace('%', '')));
+            }
+
+            // Create nodes and links for the graph
+            const nodes = [];
+            const links = [];
+
+            // Create unique nodes for each school
+            data.forEach((school) => {
+                nodes.push({
+                    id: school['Facility Name'],
+                    county: school['County'],
+                    x: Math.random() * 800,  // Random initial position
+                    y: Math.random() * 600
+                });
+            });
+
+            // Generate links between schools in the same county
+            nodes.forEach((node1) => {
+                nodes.forEach((node2) => {
+                    if (node1 !== node2 && node1.county === node2.county) {
+                        links.push({
+                            source: node1.id,
+                            target: node2.id
+                        });
+                    }
+                });
+            });
+
+            // Remove duplicate links
+            const uniqueLinks = [];
+            links.forEach((link) => {
+                const reverseLink = uniqueLinks.find((l) => l.source === link.target && l.target === link.source);
+                if (!reverseLink) {
+                    uniqueLinks.push(link);
+                }
+            });
+            links = uniqueLinks;
+
+            // D3 setup
+            const svg = d3.select("svg");
+            const width = svg.attr("width");
+            const height = svg.attr("height");
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("charge", d3.forceManyBody().strength(-100))
+                .force("link", d3.forceLink(links).distance(100))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const link = svg.selectAll(".link")
+                .data(links)
+                .enter()
+                .append("line")
+                .attr("class", "link");
+
+            const node = svg.selectAll(".node")
+                .data(nodes)
+                .enter()
+                .append("circle")
+                .attr("class", "node")
+                .attr("r", 10);
+
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", (d) => nodes.find(n => n.id === d.source).x)
+                    .attr("y1", (d) => nodes.find(n => n.id === d.source).y)
+                    .attr("x2", (d) => nodes.find(n => n.id === d.target).x)
+                    .attr("y2", (d) => nodes.find(n => n.id === d.target).y);
+
+                node
+                    .attr("cx", (d) => d.x)
+                    .attr("cy", (d) => d.y);
+            });
+        });
+    </script>
+</body>
+</html>
