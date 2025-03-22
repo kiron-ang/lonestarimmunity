@@ -150,7 +150,7 @@
 
                 // Convert vaccination rates to numbers
                 filteredData.forEach(d => {
-                    d[selectedVaccine] = parseFloat(d[selectedVaccine]) / 2;
+                    d[selectedVaccine] = parseFloat(d[selectedVaccine]) / 100;
                 });
 
                 // Sort data by selected vaccine rate in descending order
