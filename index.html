@@ -23,7 +23,6 @@
     <svg width="800" height="600"></svg>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        // Load data
         d3.csv('data.csv').then(data => {
             // Convert percentages to float
             for (const col of ['Tdap/Td', 'Meningococcal', 'Hepatitis A', 'Hepatitis B', 'MMR', 'Polio', 'Varicella']) {
@@ -31,16 +30,16 @@
             }
 
             // Create nodes and links for the graph
-            const nodes = [];
-            const links = [];
+            let nodes = [];
+            let links = [];
 
             // Create unique nodes for each school
             data.forEach((school) => {
                 nodes.push({
                     id: school['Facility Name'],
                     county: school['County'],
-                    x: Math.random() * 800,  // Random initial position
-                    y: Math.random() * 600
+                    x: Math.random() * 700 + 50,  // Random initial position within bounds
+                    y: Math.random() * 500 + 50
                 });
             });
 
@@ -57,7 +56,7 @@
             });
 
             // Remove duplicate links
-            const uniqueLinks = [];
+            let uniqueLinks = [];
             links.forEach((link) => {
                 const reverseLink = uniqueLinks.find((l) => l.source === link.target && l.target === link.source);
                 if (!reverseLink) {
