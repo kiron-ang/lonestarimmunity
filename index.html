@@ -179,7 +179,7 @@
                     .attr("y1", height - (0.85 * height))
                     .attr("x2", width)
                     .attr("y2", height - (0.85 * height))
-                    .attr("stroke", "#58A4B0")
+                    .attr("stroke", "#F5F0F6")
                     .attr("stroke-dasharray", "5,5");
 
                 // Add tooltips for bars
@@ -193,7 +193,7 @@
                             .style("visibility", "visible")
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px")
-                            .html(`${d['Facility Name']}<br>${selectedVaccine} Seventh Grade Vaccination Rate: ${(d[selectedVaccine]).toFixed(2)}%`);
+                            .html(`${d['Facility Name']}<br>${selectedVaccine} Seventh Grade Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
                     })
                     .on("mouseout", () => {
                         // Remove tooltips on mouse out
