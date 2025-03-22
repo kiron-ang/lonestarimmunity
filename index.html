@@ -32,6 +32,26 @@
             padding: 5px;
             color: #F5F0F6;
         }
+        select {
+            background-color: #58A4B0;
+            color: #F5F0F6;
+            border: none;
+            padding: 8px;
+            font-size: 16px;
+        }
+        select option {
+            background-color: #58A4B0;
+            color: #F5F0F6;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background-color: #58A4B0;
+            padding: 10px;
+            color: #F5F0F6;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,6 +77,10 @@
     </div>
     <div id="chart-container">
         <svg id="chart" width="800" height="600"></svg>
+    </div>
+
+    <div class="footer">
+        <p>This application visualizes vaccination rates across Texas counties for various vaccines. The data is filtered by county and vaccine type, displaying the rates in a bar chart. Effective herd immunity typically requires vaccination rates above 80-90% for most vaccines.</p>
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -113,6 +137,15 @@
                         .attr("width", barWidth)
                         .attr("height", d => d[selectedVaccine] * height)
                         .attr("fill", "#EF271B");
+
+                    // Herd immunity line
+                    svg.append("line")
+                        .attr("x1", 0)
+                        .attr("y1", height - (0.85 * height))
+                        .attr("x2", width)
+                        .attr("y2", height - (0.85 * height))
+                        .attr("stroke", "black")
+                        .attr("stroke-dasharray", "5,5");
 
                     // Tooltips
                     svg.selectAll("rect")
