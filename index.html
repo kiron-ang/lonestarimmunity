@@ -77,21 +77,13 @@
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
-
     <script>
-        // Define margins for the chart
         const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-
-        // Calculate chart width and height
-        const width = svg.attr("width") - margin.left - margin.right;
-        const height = svg.attr("height") - margin.top - margin.bottom;
-
-        // Select the SVG element and append a group for the chart
         const chart = d3.select("#chart")
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
-        let counties = [];
+        const width = chart.attr("width") - margin.left - margin.right;
+        const height = chart.attr("height") - margin.top - margin.bottom;
 
         d3.csv("data.csv").then(data => {
             const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
