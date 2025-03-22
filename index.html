@@ -103,7 +103,7 @@
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
                 const countyData = data.filter(d => d.County === selectedCounty);
-                const filteredData = countyData.filter(d => !isNaN(d[selectedVaccine]));
+                const filteredData = countyData.filter(d => d[selectedVaccine] !== "");
                 const barWidth = width / filteredData.length;
                 filteredData.forEach(d => {d[selectedVaccine] = parseFloat(d[selectedVaccine]);});
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
