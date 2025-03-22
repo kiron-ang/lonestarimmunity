@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lone Star Immunity</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             background-color: #1a1a1a;
@@ -18,11 +17,7 @@
             margin: auto;
         }
         .star {
-            transition: transform 0.2s ease;
-        }
-        .star:hover, .star:focus {
-            transform: scale(1.5);
-            outline: 2px solid #ff9500;
+            transition: r 0.2s ease;
         }
         .tooltip {
             position: absolute;
@@ -44,25 +39,25 @@
         const width = 800, height = 600;
         const svg = d3.select("svg");
         const tooltip = d3.select("#tooltip");
-        const fileUrl = "https://raw.githubusercontent.com/kiron-ang/LoneStarImmunity/main/data.xlsx";
+        const fileUrl = "data.csv";
 
-        fetch(fileUrl)
-            .then(response => response.arrayBuffer())
-            .then(data => {
-                const workbook = XLSX.read(data, { type: "array" });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
-                processData(json);
-            })
-            .catch(error => console.error("Error loading the file:", error));
+        d3.csv(fileUrl).then(data => {
+            console.log("Parsed Data:", data); // Debugging line to check column names
+            processData(data);
+        }).catch(error => console.error("Error loading the file:", error));
 
         function processData(data) {
-            const schools = data.map((d, i) => ({
-                name: d["Facility Name"] || `School ${i + 1}`,
-                vaccinationRate: parseFloat(d["MMR"] || 0),
-                x: Math.random() * width,
-                y: Math.random() * height
-            })).filter(d => !isNaN(d.vaccinationRate));
+            const schools = data.slice(2).map((d, i) => { // Skip the first two rows
+                const name = (d["Unnamed: 2"] || "").trim();
+                const rate = parseFloat((d["Unnamed: 9"] || "0").toString().replace("%", "")) / 100;
+                
+                return {
+                    name: name || `School ${i + 1}`,
+                    vaccinationRate: isNaN(rate) ? 0 : rate,
+                    x: Math.random() * width,
+                    y: Math.random() * height
+                };
+            }).filter(d => d.vaccinationRate > 0);
 
             svg.selectAll(".star").remove();
 
@@ -72,16 +67,20 @@
                 .attr("class", "star")
                 .attr("cx", d => d.x)
                 .attr("cy", d => d.y)
-                .attr("r", 4)
+                .attr("r", d => 4 + d.vaccinationRate * 10) // Adjust size based on rate
                 .attr("fill", d => d3.interpolateOranges(d.vaccinationRate))
                 .attr("tabindex", 0)
                 .on("mouseover focus", function (event, d) {
+                    d3.select(this).attr("r", d => 8 + d.vaccinationRate * 10); // Enlarge instead of scaling
                     tooltip.style("display", "block")
                         .html(`${d.name}: ${(d.vaccinationRate * 100).toFixed(1)}% vaccinated`)
                         .style("left", `${event.pageX + 10}px`)
                         .style("top", `${event.pageY - 10}px`);
                 })
-                .on("mouseout blur", () => tooltip.style("display", "none"));
+                .on("mouseout blur", function (event, d) {
+                    d3.select(this).attr("r", d => 4 + d.vaccinationRate * 10); // Restore original size
+                    tooltip.style("display", "none");
+                });
         }
     </script>
 </body>
