@@ -6,20 +6,42 @@
     <title>Lone Star Immunity</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Montserrat', sans-serif;
+            background-color: #1A1D23; /* Dark Blue background */
+            color: white; /* White text */
         }
         header {
             text-align: center;
             margin-bottom: 20px;
         }
+        #chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: solid;
+            border-width: 1px;
+            border-radius: 5px;
+            padding: 5px;
+            color: black;
+        }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
         <h1>Lone Star Immunity</h1>
         <p>Exploring Vaccination Rates in Texas</p>
     </header>
-    <svg id="chart" width="800" height="600"></svg>
+    <div id="chart-container">
+        <svg id="chart" width="800" height="600"></svg>
+    </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
@@ -37,6 +59,9 @@
                 d.MMR = parseFloat(d.MMR.replace("%", "")) / 100;
             });
 
+            // Sort data by MMR rate in descending order
+            data.sort((a, b) => b.MMR - a.MMR);
+
             // Scales
             const xScale = d3.scaleBand()
                 .domain(data.map(d => d['Facility Name']))
@@ -49,14 +74,20 @@
 
             // Axes
             const xAxis = d3.axisBottom(xScale);
-            const yAxis = d3.axisLeft(yScale).tickFormat(d => `${d * 100}%`);
+            const yAxis = d3.axisLeft(yScale).tickFormat(d => `${(d * 100).toFixed(2)}%`);
 
             svg.append("g")
                 .attr("transform", `translate(0, ${height})`)
-                .call(xAxis);
+                .call(xAxis)
+                .selectAll("text")
+                .style("font-size", "12px")
+                .style("font-family", "Montserrat");
 
             svg.append("g")
-                .call(yAxis);
+                .call(yAxis)
+                .selectAll("text")
+                .style("font-size", "12px")
+                .style("font-family", "Montserrat");
 
             // Bars
             svg.selectAll("rect")
@@ -66,27 +97,24 @@
                 .attr("x", d => xScale(d['Facility Name']))
                 .attr("y", d => yScale(d.MMR))
                 .attr("width", xScale.bandwidth())
-                .attr("height", d => height - yScale(d.MMR));
+                .attr("height", d => height - yScale(d.MMR))
+                .attr("fill", "#3498db"); // Light Blue fill for bars
 
             // Tooltips
             svg.selectAll("rect")
                 .on("mouseover", (event, d) => {
                     const tooltip = d3.select("body")
                         .append("div")
+                        .attr("class", "tooltip")
                         .style("position", "absolute")
                         .style("visibility", "visible")
-                        .style("background-color", "white")
-                        .style("border", "solid")
-                        .style("border-width", "1px")
-                        .style("border-radius", "5px")
-                        .style("padding", "5px")
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 28) + "px")
-                        .html(`Facility: ${d['Facility Name']}<br>MMR Vaccination Rate: ${d.MMR * 100}%`);
+                        .html(`Facility: ${d['Facility Name']}<br>MMR Vaccination Rate: ${(d.MMR * 100).toFixed(2)}%`);
                 })
                 .on("mouseout", () => {
                     d3.select("body")
-                        .selectAll("div")
+                        .selectAll(".tooltip")
                         .remove();
                 });
         });
