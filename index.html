@@ -17,6 +17,8 @@
         #chart-container {
             display: none; /* Hide chart initially */
             margin-top: 20px;
+            display: flex;
+            justify-content: center;
         }
         #selector-container {
             text-align: center;
@@ -30,9 +32,6 @@
             padding: 5px;
             color: black;
         }
-        .county-select {
-            margin: 5px;
-        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,11 +43,16 @@
         <p>Exploring Vaccination Rates in Texas</p>
     </header>
     <div id="selector-container">
-        <select class="county-select" id="county1"></select>
-        <select class="county-select" id="county2"></select>
-        <select class="county-select" id="county3"></select>
-        <select class="county-select" id="county4"></select>
-        <select class="county-select" id="county5"></select>
+        <select id="county-select"></select>
+        <select id="vaccine-select">
+            <option value="MMR">MMR</option>
+            <option value="Polio">Polio</option>
+            <option value="Varicella">Varicella</option>
+            <option value="Hepatitis A">Hepatitis A</option>
+            <option value="Hepatitis B">Hepatitis B</option>
+            <option value="Tdap/Td">Tdap/Td</option>
+            <option value="Meningococcal">Meningococcal</option>
+        </select>
         <button id="showDataButton">Show me the data!</button>
     </div>
     <div id="chart-container">
@@ -70,77 +74,44 @@
             // Extract unique counties
             const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
 
-            // Populate dropdowns with counties
-            for (let i = 1; i <= 5; i++) {
-                const select = document.getElementById(`county${i}`);
-                uniqueCounties.forEach(county => {
-                    const option = document.createElement("option");
-                    option.text = county;
-                    option.value = county;
-                    select.appendChild(option);
-                });
-            }
+            // Populate county dropdown
+            const countySelect = document.getElementById("county-select");
+            uniqueCounties.forEach(county => {
+                const option = document.createElement("option");
+                option.text = county;
+                option.value = county;
+                countySelect.appendChild(option);
+            });
 
             // Button click handler
             document.getElementById("showDataButton").addEventListener("click", () => {
-                counties = [];
-                for (let i = 1; i <= 5; i++) {
-                    const select = document.getElementById(`county${i}`);
-                    if (select.value !== "") {
-                        counties.push(select.value);
-                    }
-                }
+                const selectedCounty = countySelect.value;
+                const selectedVaccine = document.getElementById("vaccine-select").value;
 
-                // Filter data by selected counties
-                const filteredData = data.filter(d => counties.includes(d.County));
+                if (selectedCounty !== "") {
+                    // Filter data by selected county and vaccine
+                    const filteredData = data.filter(d => d.County === selectedCounty);
 
-                if (filteredData.length > 0) {
                     // Convert vaccination rates to numbers
                     filteredData.forEach(d => {
-                        d.MMR = parseFloat(d.MMR.replace("%", "")) / 100;
+                        d[selectedVaccine] = parseFloat(d[selectedVaccine].replace("%", "")) / 100;
                     });
 
-                    // Sort data by MMR rate in descending order
-                    filteredData.sort((a, b) => b.MMR - a.MMR);
-
-                    // Scales
-                    const xScale = d3.scaleBand()
-                        .domain(filteredData.map(d => d['Facility Name']))
-                        .range([0, width])
-                        .padding(0.2);
-
-                    const yScale = d3.scaleLinear()
-                        .domain([0, 1])
-                        .range([height, 0]);
-
-                    // Axes
-                    const xAxis = d3.axisBottom(xScale);
-                    const yAxis = d3.axisLeft(yScale).tickFormat(d => `${(d * 100).toFixed(2)}%`);
-
-                    svg.selectAll("*").remove(); // Clear previous chart
-
-                    svg.append("g")
-                        .attr("transform", `translate(0, ${height})`)
-                        .call(xAxis)
-                        .selectAll("text")
-                        .style("font-size", "12px")
-                        .style("font-family", "Montserrat");
-
-                    svg.append("g")
-                        .call(yAxis)
-                        .selectAll("text")
-                        .style("font-size", "12px")
-                        .style("font-family", "Montserrat");
+                    // Sort data by selected vaccine rate in descending order
+                    filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
 
                     // Bars
+                    svg.selectAll("*").remove(); // Clear previous chart
+
+                    const barWidth = width / filteredData.length;
                     svg.selectAll("rect")
                         .data(filteredData)
                         .enter()
                         .append("rect")
-                        .attr("x", d => xScale(d['Facility Name']))
-                        .attr("y", d => yScale(d.MMR))
-                        .attr("width", xScale.bandwidth())
-                        .attr("height", d => height - yScale(d.MMR))
+                        .attr("x", (d, i) => i * barWidth)
+                        .attr("y", d => height - (d[selectedVaccine] * height))
+                        .attr("width", barWidth)
+                        .attr("height", d => d[selectedVaccine] * height)
                         .attr("fill", "#FFC080"); // Texas Red fill for bars
 
                     // Tooltips
@@ -153,7 +124,7 @@
                                 .style("visibility", "visible")
                                 .style("left", (event.pageX + 10) + "px")
                                 .style("top", (event.pageY - 28) + "px")
-                                .html(`Facility: ${d['Facility Name']}<br>MMR Vaccination Rate: ${(d.MMR * 100).toFixed(2)}%`);
+                                .html(`Facility: ${d['Facility Name']}<br>${selectedVaccine} Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
                         })
                         .on("mouseout", () => {
                             d3.select("body")
@@ -163,7 +134,7 @@
 
                     document.getElementById("chart-container").style.display = "block";
                 } else {
-                    alert("Please select at least one county.");
+                    alert("Please select a county.");
                 }
             });
         });
