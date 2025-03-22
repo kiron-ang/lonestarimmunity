@@ -124,7 +124,7 @@
                     .html(`${d['Facility Name']}<br>School Type: ${d['School Type']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
                     const tooltipWidth = tooltip.node().offsetWidth;
                     let left = event.pageX + 10;
-                    let top = event.pageY + 30;
+                    let top = event.pageY - tooltip.node().offsetHeight;
                     if (left + tooltipWidth > window.innerWidth) {
                         left = event.pageX - tooltipWidth - 10;
                     }
