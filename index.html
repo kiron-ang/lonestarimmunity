@@ -16,7 +16,6 @@
         }
         #chart-container {
             display: none; /* Hide chart initially */
-            margin-top: 20px;
             display: flex;
             justify-content: center;
         }
@@ -85,13 +84,12 @@
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-        const width = 800 - margin.left - margin.right;
-        const height = 600 - margin.top - margin.bottom;
+        const width = 800;
+        const height = 600;
 
         const svg = d3.select("#chart")
             .append("g")
-            .attr("transform", `translate(${width / 2}, ${height / 2})`);
+            .attr("transform", `translate(${width}, ${height})`);
 
         let counties = [];
         d3.csv("data.csv").then(data => {
@@ -112,63 +110,59 @@
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
 
-                if (selectedCounty !== "") {
-                    // Filter data by selected county and vaccine
-                    const filteredData = data.filter(d => d.County === selectedCounty);
+                // Filter data by selected county and vaccine
+                const filteredData = data.filter(d => d.County === selectedCounty);
 
-                    // Convert vaccination rates to numbers
-                    filteredData.forEach(d => {
-                        d[selectedVaccine] = parseFloat(d[selectedVaccine].replace("%", "")) / 100;
+                // Convert vaccination rates to numbers
+                filteredData.forEach(d => {
+                    d[selectedVaccine] = parseFloat(d[selectedVaccine].replace("%", "")) / 100;
+                });
+
+                // Sort data by selected vaccine rate in descending order
+                filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
+
+                // Bars
+                svg.selectAll("*").remove(); // Clear previous chart
+
+                const barWidth = width / filteredData.length;
+                svg.selectAll("rect")
+                    .data(filteredData)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d, i) => i * barWidth)
+                    .attr("y", d => height - (d[selectedVaccine] * height))
+                    .attr("width", barWidth)
+                    .attr("height", d => d[selectedVaccine] * height)
+                    .attr("fill", "#EF271B");
+
+                // Herd immunity line
+                svg.append("line")
+                    .attr("x1", 0)
+                    .attr("y1", height - (0.85 * height))
+                    .attr("x2", width)
+                    .attr("y2", height - (0.85 * height))
+                    .attr("stroke", "black")
+                    .attr("stroke-dasharray", "5,5");
+
+                // Tooltips
+                svg.selectAll("rect")
+                    .on("mouseover", (event, d) => {
+                        const tooltip = d3.select("body")
+                            .append("div")
+                            .attr("class", "tooltip")
+                            .style("position", "absolute")
+                            .style("visibility", "visible")
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px")
+                            .html(`Facility: ${d['Facility Name']}<br>${selectedVaccine} Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
+                    })
+                    .on("mouseout", () => {
+                        d3.select("body")
+                            .selectAll(".tooltip")
+                            .remove();
                     });
 
-                    // Sort data by selected vaccine rate in descending order
-                    filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
-
-                    // Bars
-                    svg.selectAll("*").remove(); // Clear previous chart
-
-                    const barWidth = width / filteredData.length;
-                    svg.selectAll("rect")
-                        .data(filteredData)
-                        .enter()
-                        .append("rect")
-                        .attr("x", (d, i) => i * barWidth)
-                        .attr("y", d => height - (d[selectedVaccine] * height))
-                        .attr("width", barWidth)
-                        .attr("height", d => d[selectedVaccine] * height)
-                        .attr("fill", "#EF271B");
-
-                    // Herd immunity line
-                    svg.append("line")
-                        .attr("x1", 0)
-                        .attr("y1", height - (0.85 * height))
-                        .attr("x2", width)
-                        .attr("y2", height - (0.85 * height))
-                        .attr("stroke", "black")
-                        .attr("stroke-dasharray", "5,5");
-
-                    // Tooltips
-                    svg.selectAll("rect")
-                        .on("mouseover", (event, d) => {
-                            const tooltip = d3.select("body")
-                                .append("div")
-                                .attr("class", "tooltip")
-                                .style("position", "absolute")
-                                .style("visibility", "visible")
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 28) + "px")
-                                .html(`Facility: ${d['Facility Name']}<br>${selectedVaccine} Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
-                        })
-                        .on("mouseout", () => {
-                            d3.select("body")
-                                .selectAll(".tooltip")
-                                .remove();
-                        });
-
-                    document.getElementById("chart-container").style.display = "block";
-                } else {
-                    alert("Please select a county.");
-                }
+                document.getElementById("chart-container").style.display = "block";
             });
         });
     </script>
