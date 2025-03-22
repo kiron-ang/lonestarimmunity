@@ -62,14 +62,16 @@
         <p>Exploring Vaccination Rates in Texas</p>
     </header>
     <div id="selector-container">
-        <select id="county-select"></select>
+        <select id="county-select">
+            <option value="Hidalgo" selected>Hidalgo</option>
+        </select>
         <select id="vaccine-select">
             <option value="MMR">MMR</option>
             <option value="Polio">Polio</option>
             <option value="Varicella">Varicella</option>
             <option value="Hepatitis A">Hepatitis A</option>
             <option value="Hepatitis B">Hepatitis B</option>
-            <option value="Tdap/Td">Tdap/Td</option>
+            <option value="Tdap/Td" selected>Tdap/Td</option>
             <option value="Meningococcal">Meningococcal</option>
         </select>
         <button id="showDataButton">Show me the data!</button>
@@ -115,7 +117,7 @@
 
                 // Convert vaccination rates to numbers
                 filteredData.forEach(d => {
-                    d[selectedVaccine] = parseFloat(d[selectedVaccine].replace("%", "")) / 100;
+                    d[selectedVaccine] = parseFloat(d[selectedVaccine]);
                 });
 
                 // Sort data by selected vaccine rate in descending order
