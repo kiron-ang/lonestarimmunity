@@ -78,18 +78,17 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     
     <script>
-        const svg = d3.select("#chart");
+        // Define margins for the chart
+        const margin = { top: 10, right: 10, bottom: 10, left: 10 };
         
-        // Function to resize chart
-        function resizeChart() {
-            const width = window.innerWidth * 0.8; // 80% of the viewport width
-            const height = window.innerHeight * 0.6; // 60% of the viewport height
+        // Calculate chart width and height
+        const width = device-width - margin.left - margin.right;
+        const height = device-height - margin.top - margin.bottom;
 
-            svg.attr("width", width)
-               .attr("height", height);
-
-            return { width, height };
-        }
+        // Select the SVG element and append a group for the chart
+        const chart = d3.select("#chart")
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         let counties = [];
         
@@ -110,16 +109,7 @@
                 filteredData.forEach(d => { d[selectedVaccine] = parseFloat(d[selectedVaccine]) / 100; });
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
 
-                const { width, height } = resizeChart();
-                const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-                const chartWidth = width - margin.left - margin.right;
-                const chartHeight = height - margin.top - margin.bottom;
-
                 chart.selectAll("*").remove(); // Clear existing chart elements
-
-                // Create a group to hold the chart elements
-                const chart = svg.append("g")
-                    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
                 const barWidth = chartWidth / filteredData.length;
                 
@@ -161,11 +151,6 @@
             });
         });
         
-        // Resize chart on window resize
-        window.addEventListener("resize", resizeChart);
-        
-        // Initialize chart on load
-        resizeChart();
     </script>
 </body>
 </html>
