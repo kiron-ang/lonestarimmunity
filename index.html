@@ -111,7 +111,7 @@
 
                 chart.selectAll("*").remove(); // Clear existing chart elements
 
-                const barWidth = chartWidth / filteredData.length;
+                const barWidth = width / filteredData.length;
 
                 // Draw the bars
                 chart.selectAll("rect")
@@ -119,9 +119,9 @@
                     .enter()
                     .append("rect")
                     .attr("x", (d, i) => i * barWidth)
-                    .attr("y", d => chartHeight - (d[selectedVaccine] * chartHeight))
+                    .attr("y", d => height - (d[selectedVaccine] * height))
                     .attr("width", barWidth)
-                    .attr("height", d => d[selectedVaccine] * chartHeight)
+                    .attr("height", d => d[selectedVaccine] * height)
                     .attr("fill", "#F5F0F6")
                     .on("mouseover", function () { d3.select(this).attr("fill", "#EF271B"); })
                     .on("mouseout", function () { d3.select(this).attr("fill", "#F5F0F6"); });
@@ -129,9 +129,9 @@
                 // Add a horizontal line for reference
                 chart.append("line")
                     .attr("x1", 0)
-                    .attr("y1", chartHeight - (0.85 * chartHeight))
+                    .attr("y1", height - (0.85 * height))
                     .attr("x2", chartWidth)
-                    .attr("y2", chartHeight - (0.85 * chartHeight))
+                    .attr("y2", height - (0.85 * height))
                     .attr("stroke", "#58A4B0")
                     .attr("stroke-dasharray", "5,5");
 
