@@ -7,8 +7,8 @@
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
-            background-color: #002868; /* Texas Blue background */
-            color: white; /* White text */
+            background-color: #58A4B0;
+            color: #F5F0F6; 
         }
         header {
             text-align: center;
@@ -25,12 +25,12 @@
         }
         .tooltip {
             position: absolute;
-            background-color: white;
+            background-color: #58A4B0;
             border: solid;
             border-width: 1px;
             border-radius: 5px;
             padding: 5px;
-            color: black;
+            color: #F5F0F6;
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,7 +112,7 @@
                         .attr("y", d => height - (d[selectedVaccine] * height))
                         .attr("width", barWidth)
                         .attr("height", d => d[selectedVaccine] * height)
-                        .attr("fill", "#FFC080"); // Texas Red fill for bars
+                        .attr("fill", "#EF271B");
 
                     // Tooltips
                     svg.selectAll("rect")
