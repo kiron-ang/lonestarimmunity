@@ -27,7 +27,6 @@
         /* Styles for the header section */
         header {
             text-align: center; /* Center text alignment */
-            margin-bottom: 20px; /* Bottom margin */
         }
         
         /* Styles for the chart container */
@@ -69,16 +68,6 @@
             color: #F5F0F6; /* Text color */
         }
         
-        /* Styles for the footer */
-        .footer {
-            position: fixed; /* Fixed positioning */
-            bottom: 0; /* Position at the bottom */
-            width: 100%; /* Full width */
-            text-align: center; /* Center text alignment */
-            background-color: #58A4B0; /* Background color */
-            padding: 10px; /* Padding */
-            color: #F5F0F6; /* Text color */
-        }
     </style>
     
     <!-- Preconnect to Google Fonts for faster loading -->
@@ -124,10 +113,9 @@
         <svg id="chart" width="800" height="600"></svg>
     </div>
 
-    <!-- Footer section with information -->
-    <div class="footer">
-        <p>This application visualizes vaccination rates across Texas schools for various vaccines. The data is filtered by county and vaccine type, displaying the rates in a bar chart. Effective herd immunity typically requires vaccination rates above 80-90% for most vaccines.</p>
-    </div>
+    <p>This application visualizes vaccination rates across Texas schools for various vaccines. 
+        The data is filtered by county and vaccine type, displaying the rates in a bar chart. 
+        Effective herd immunity typically requires vaccination rates above 80-90% for most vaccines.</p>
 
     <!-- Import D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -174,7 +162,7 @@
 
                 // Convert vaccination rates to numbers
                 filteredData.forEach(d => {
-                    d[selectedVaccine] = parseFloat(d[selectedVaccine]);
+                    d[selectedVaccine] = parseFloat(d[selectedVaccine] / 2);
                 });
 
                 // Sort data by selected vaccine rate in descending order
@@ -192,9 +180,9 @@
                     .enter()
                     .append("rect")
                     .attr("x", (d, i) => i * barWidth)
-                    .attr("y", d => height - (d[selectedVaccine] / 2 * height))
+                    .attr("y", d => height - (d[selectedVaccine] * height))
                     .attr("width", barWidth)
-                    .attr("height", d => d[selectedVaccine] / 2  * height)
+                    .attr("height", d => d[selectedVaccine] * height)
                     .attr("fill", "#EF271B");
 
                 // Draw a line for herd immunity threshold
@@ -203,7 +191,7 @@
                     .attr("y1", height - (0.85 * height))
                     .attr("x2", width)
                     .attr("y2", height - (0.85 * height))
-                    .attr("stroke", "black")
+                    .attr("stroke", "#58A4B0")
                     .attr("stroke-dasharray", "5,5");
 
                 // Add tooltips for bars
