@@ -1,75 +1,109 @@
 <!DOCTYPE html>
+<!-- Document type declaration -->
 <html lang="en">
+<!-- Root element of the HTML document, specifying English as the language -->
 <head>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
-    <link rel="manifest" href="/site.webmanifest">
+    <!-- Link to the favicon for the webpage -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Character encoding for the document -->
     <meta charset="UTF-8">
+    
+    <!-- Viewport settings for responsive design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Title of the webpage -->
     <title>Lone Star Immunity</title>
+    
+    <!-- Internal CSS styles for the webpage -->
     <style>
+        /* Global styles for the body */
         body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #58A4B0;
-            color: #F5F0F6; 
+            font-family: 'Montserrat', sans-serif; /* Font family */
+            background-color: #58A4B0; /* Background color */
+            color: #F5F0F6; /* Text color */
         }
+        
+        /* Styles for the header section */
         header {
-            text-align: center;
-            margin-bottom: 20px;
+            text-align: center; /* Center text alignment */
+            margin-bottom: 20px; /* Bottom margin */
         }
+        
+        /* Styles for the chart container */
         #chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center; /* Optional: For vertical centering */
-            height: 100vh; /* Optional: Set the container height to the viewport height */
+            display: flex; /* Flexbox layout */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height */
         }
+        
+        /* Styles for the selector container */
         #selector-container {
-            text-align: center;
+            text-align: center; /* Center text alignment */
         }
+        
+        /* Styles for tooltips */
         .tooltip {
-            position: absolute;
-            background-color: #58A4B0;
-            border: solid;
-            border-width: 1px;
-            border-radius: 5px;
-            padding: 5px;
-            color: #F5F0F6;
+            position: absolute; /* Absolute positioning */
+            background-color: #58A4B0; /* Background color */
+            border: solid; /* Solid border */
+            border-width: 1px; /* Border width */
+            border-radius: 5px; /* Rounded corners */
+            padding: 5px; /* Padding */
+            color: #F5F0F6; /* Text color */
         }
+        
+        /* Styles for select and button elements */
         select, button {
-            background-color: #58A4B0;
-            color: #F5F0F6;
-            border: none;
-            padding: 8px;
-            font-size: 16px;
+            background-color: #58A4B0; /* Background color */
+            color: #F5F0F6; /* Text color */
+            border: none; /* No border */
+            padding: 8px; /* Padding */
+            font-size: 16px; /* Font size */
         }
+        
+        /* Styles for option elements */
         option {
-            background-color: #58A4B0;
-            color: #F5F0F6;
+            background-color: #58A4B0; /* Background color */
+            color: #F5F0F6; /* Text color */
         }
+        
+        /* Styles for the footer */
         .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            background-color: #58A4B0;
-            padding: 10px;
-            color: #F5F0F6;
+            position: fixed; /* Fixed positioning */
+            bottom: 0; /* Position at the bottom */
+            width: 100%; /* Full width */
+            text-align: center; /* Center text alignment */
+            background-color: #58A4B0; /* Background color */
+            padding: 10px; /* Padding */
+            color: #F5F0F6; /* Text color */
         }
     </style>
+    
+    <!-- Preconnect to Google Fonts for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Import Montserrat font from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
+    <!-- Header section with title and subtitle -->
     <header>
         <h1>Lone Star Immunity</h1>
         <h2>Exploring Vaccination Rates in Texas</h2>
     </header>
+    
+    <!-- Container for selectors (county and vaccine) -->
     <div id="selector-container">
+        <!-- County selector dropdown -->
         <select id="county-select">
             <option value="Hidalgo" selected>Hidalgo</option>
         </select>
+        
+        <!-- Vaccine selector dropdown -->
         <select id="vaccine-select">
             <option value="MMR">MMR</option>
             <option value="Polio">Polio</option>
@@ -79,32 +113,48 @@
             <option value="Tdap/Td" selected>Tdap/Td</option>
             <option value="Meningococcal">Meningococcal</option>
         </select>
+        
+        <!-- Button to show data -->
         <button id="showDataButton">Show me the data!</button>
     </div>
+    
+    <!-- Container for the chart -->
     <div id="chart-container">
+        <!-- SVG element for the chart -->
         <svg id="chart" width="800" height="600"></svg>
     </div>
 
+    <!-- Footer section with information -->
     <div class="footer">
         <p>This application visualizes vaccination rates across Texas counties for various vaccines. The data is filtered by county and vaccine type, displaying the rates in a bar chart. Effective herd immunity typically requires vaccination rates above 80-90% for most vaccines.</p>
     </div>
 
+    <!-- Import D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- JavaScript code for data visualization -->
     <script>
-        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        // Define margins for the chart
+        const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+        
+        // Calculate chart width and height
         const width = 800 - margin.left - margin.right;
         const height = 600 - margin.top - margin.bottom;
 
+        // Select the SVG element and append a group for the chart
         const svg = d3.select("#chart")
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+        // Initialize an empty array for counties
         let counties = [];
+
+        // Load data from CSV file
         d3.csv("data.csv").then(data => {
-            // Extract unique counties
+            // Extract unique counties from the data and sort them
             const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
 
-            // Populate county dropdown
+            // Populate the county dropdown with unique counties
             const countySelect = document.getElementById("county-select");
             uniqueCounties.forEach(county => {
                 const option = document.createElement("option");
@@ -113,12 +163,13 @@
                 countySelect.appendChild(option);
             });
 
-            // Button click handler
+            // Add event listener to the show data button
             document.getElementById("showDataButton").addEventListener("click", () => {
+                // Get the selected county and vaccine
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
 
-                // Filter data by selected county and vaccine
+                // Filter data by selected county
                 const filteredData = data.filter(d => d.County === selectedCounty);
 
                 // Convert vaccination rates to numbers
@@ -129,10 +180,13 @@
                 // Sort data by selected vaccine rate in descending order
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
 
-                // Bars
-                svg.selectAll("*").remove(); // Clear previous chart
+                // Clear previous chart
+                svg.selectAll("*").remove();
 
+                // Calculate bar width
                 const barWidth = width / filteredData.length;
+
+                // Create bars for the chart
                 svg.selectAll("rect")
                     .data(filteredData)
                     .enter()
@@ -143,7 +197,7 @@
                     .attr("height", d => d[selectedVaccine] * height)
                     .attr("fill", "#EF271B");
 
-                // Herd immunity line
+                // Draw a line for herd immunity threshold
                 svg.append("line")
                     .attr("x1", 0)
                     .attr("y1", height - (0.85 * height))
@@ -152,9 +206,10 @@
                     .attr("stroke", "black")
                     .attr("stroke-dasharray", "5,5");
 
-                // Tooltips
+                // Add tooltips for bars
                 svg.selectAll("rect")
                     .on("mouseover", (event, d) => {
+                        // Create a tooltip div
                         const tooltip = d3.select("body")
                             .append("div")
                             .attr("class", "tooltip")
@@ -162,9 +217,10 @@
                             .style("visibility", "visible")
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px")
-                            .html(`Facility: ${d['Facility Name']}<br>${selectedVaccine} Vaccination Rate: ${(d[selectedVaccine] * 100).toFixed(2)}%`);
+                            .html(`Facility: ${d['Facility Name']}<br>${selectedVaccine} Vaccination Rate: ${(d[selectedVaccine]).toFixed(2)}%`);
                     })
                     .on("mouseout", () => {
+                        // Remove tooltips on mouse out
                         d3.select("body")
                             .selectAll(".tooltip")
                             .remove();
