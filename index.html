@@ -40,7 +40,7 @@
             font-size: 16px;
         }
     </style>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
@@ -49,14 +49,14 @@
     <header>
         <h1>Lone Star Immunity</h1>
         <h2>Exploring Vaccination Rates Among Texas Seventh Graders!</h2>
-        <p>This application visualizes vaccination rates across Texas schools for various vaccines. 
-            Use the dropdown menus below to make a bar chart for different counties and vaccines! 
+        <p>This application visualizes vaccination rates across Texas schools for various vaccines.
+            Use the dropdown menus below to make a bar chart for different counties and vaccines!
             Click a bar to learn more about the school district that it represents.
             The dotted line represents a vaccination rate of 85%. Note that herd immunity typically
-            needs 80% to 90% of people in a given group to be vaccinated. 
+            needs 80% to 90% of people in a given group to be vaccinated.
         </p>
     </header>
-    
+
     <div id="selector-container">
         <select id="county-select"></select>
         <select id="vaccine-select">
@@ -70,20 +70,20 @@
         </select>
         <button id="showDataButton">Make a Chart!</button>
     </div>
-    
+
     <div id="chart-container">
         <svg id="chart"></svg>
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    
+
     <script>
         // Define margins for the chart
         const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-        
+
         // Calculate chart width and height
-        const width = device-width - margin.left - margin.right;
-        const height = device-height - margin.top - margin.bottom;
+        const width = window.innerWidth - margin.left - margin.right;
+        const height = window.innerHeight - margin.top - margin.bottom;
 
         // Select the SVG element and append a group for the chart
         const chart = d3.select("#chart")
@@ -91,7 +91,7 @@
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         let counties = [];
-        
+
         d3.csv("data.csv").then(data => {
             const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
             const countySelect = document.getElementById("county-select");
@@ -101,7 +101,7 @@
                 option.value = county;
                 countySelect.appendChild(option);
             });
-            
+
             document.getElementById("showDataButton").addEventListener("click", () => {
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
@@ -112,7 +112,7 @@
                 chart.selectAll("*").remove(); // Clear existing chart elements
 
                 const barWidth = chartWidth / filteredData.length;
-                
+
                 // Draw the bars
                 chart.selectAll("rect")
                     .data(filteredData)
@@ -125,7 +125,7 @@
                     .attr("fill", "#F5F0F6")
                     .on("mouseover", function () { d3.select(this).attr("fill", "#EF271B"); })
                     .on("mouseout", function () { d3.select(this).attr("fill", "#F5F0F6"); });
-                
+
                 // Add a horizontal line for reference
                 chart.append("line")
                     .attr("x1", 0)
@@ -150,7 +150,6 @@
                     });
             });
         });
-        
     </script>
 </body>
 </html>
