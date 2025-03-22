@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
-            background-color: #1A1D23; /* Dark Blue background */
+            background-color: #002868; /* Texas Blue background */
             color: white; /* White text */
         }
         header {
@@ -15,10 +15,11 @@
             margin-bottom: 20px;
         }
         #chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            display: none; /* Hide chart initially */
+            margin-top: 20px;
+        }
+        #selector-container {
+            text-align: center;
         }
         .tooltip {
             position: absolute;
@@ -28,6 +29,9 @@
             border-radius: 5px;
             padding: 5px;
             color: black;
+        }
+        .county-select {
+            margin: 5px;
         }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,6 +43,14 @@
         <h1>Lone Star Immunity</h1>
         <p>Exploring Vaccination Rates in Texas</p>
     </header>
+    <div id="selector-container">
+        <select class="county-select" id="county1"></select>
+        <select class="county-select" id="county2"></select>
+        <select class="county-select" id="county3"></select>
+        <select class="county-select" id="county4"></select>
+        <select class="county-select" id="county5"></select>
+        <button id="showDataButton">Show me the data!</button>
+    </div>
     <div id="chart-container">
         <svg id="chart" width="800" height="600"></svg>
     </div>
@@ -53,70 +65,107 @@
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+        let counties = [];
         d3.csv("data.csv").then(data => {
-            // Convert vaccination rates to numbers
-            data.forEach(d => {
-                d.MMR = parseFloat(d.MMR.replace("%", "")) / 100;
-            });
+            // Extract unique counties
+            const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
 
-            // Sort data by MMR rate in descending order
-            data.sort((a, b) => b.MMR - a.MMR);
-
-            // Scales
-            const xScale = d3.scaleBand()
-                .domain(data.map(d => d['Facility Name']))
-                .range([0, width])
-                .padding(0.2);
-
-            const yScale = d3.scaleLinear()
-                .domain([0, 1])
-                .range([height, 0]);
-
-            // Axes
-            const xAxis = d3.axisBottom(xScale);
-            const yAxis = d3.axisLeft(yScale).tickFormat(d => `${(d * 100).toFixed(2)}%`);
-
-            svg.append("g")
-                .attr("transform", `translate(0, ${height})`)
-                .call(xAxis)
-                .selectAll("text")
-                .style("font-size", "12px")
-                .style("font-family", "Montserrat");
-
-            svg.append("g")
-                .call(yAxis)
-                .selectAll("text")
-                .style("font-size", "12px")
-                .style("font-family", "Montserrat");
-
-            // Bars
-            svg.selectAll("rect")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("x", d => xScale(d['Facility Name']))
-                .attr("y", d => yScale(d.MMR))
-                .attr("width", xScale.bandwidth())
-                .attr("height", d => height - yScale(d.MMR))
-                .attr("fill", "#3498db"); // Light Blue fill for bars
-
-            // Tooltips
-            svg.selectAll("rect")
-                .on("mouseover", (event, d) => {
-                    const tooltip = d3.select("body")
-                        .append("div")
-                        .attr("class", "tooltip")
-                        .style("position", "absolute")
-                        .style("visibility", "visible")
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px")
-                        .html(`Facility: ${d['Facility Name']}<br>MMR Vaccination Rate: ${(d.MMR * 100).toFixed(2)}%`);
-                })
-                .on("mouseout", () => {
-                    d3.select("body")
-                        .selectAll(".tooltip")
-                        .remove();
+            // Populate dropdowns with counties
+            for (let i = 1; i <= 5; i++) {
+                const select = document.getElementById(`county${i}`);
+                uniqueCounties.forEach(county => {
+                    const option = document.createElement("option");
+                    option.text = county;
+                    option.value = county;
+                    select.appendChild(option);
                 });
+            }
+
+            // Button click handler
+            document.getElementById("showDataButton").addEventListener("click", () => {
+                counties = [];
+                for (let i = 1; i <= 5; i++) {
+                    const select = document.getElementById(`county${i}`);
+                    if (select.value !== "") {
+                        counties.push(select.value);
+                    }
+                }
+
+                // Filter data by selected counties
+                const filteredData = data.filter(d => counties.includes(d.County));
+
+                if (filteredData.length > 0) {
+                    // Convert vaccination rates to numbers
+                    filteredData.forEach(d => {
+                        d.MMR = parseFloat(d.MMR.replace("%", "")) / 100;
+                    });
+
+                    // Sort data by MMR rate in descending order
+                    filteredData.sort((a, b) => b.MMR - a.MMR);
+
+                    // Scales
+                    const xScale = d3.scaleBand()
+                        .domain(filteredData.map(d => d['Facility Name']))
+                        .range([0, width])
+                        .padding(0.2);
+
+                    const yScale = d3.scaleLinear()
+                        .domain([0, 1])
+                        .range([height, 0]);
+
+                    // Axes
+                    const xAxis = d3.axisBottom(xScale);
+                    const yAxis = d3.axisLeft(yScale).tickFormat(d => `${(d * 100).toFixed(2)}%`);
+
+                    svg.selectAll("*").remove(); // Clear previous chart
+
+                    svg.append("g")
+                        .attr("transform", `translate(0, ${height})`)
+                        .call(xAxis)
+                        .selectAll("text")
+                        .style("font-size", "12px")
+                        .style("font-family", "Montserrat");
+
+                    svg.append("g")
+                        .call(yAxis)
+                        .selectAll("text")
+                        .style("font-size", "12px")
+                        .style("font-family", "Montserrat");
+
+                    // Bars
+                    svg.selectAll("rect")
+                        .data(filteredData)
+                        .enter()
+                        .append("rect")
+                        .attr("x", d => xScale(d['Facility Name']))
+                        .attr("y", d => yScale(d.MMR))
+                        .attr("width", xScale.bandwidth())
+                        .attr("height", d => height - yScale(d.MMR))
+                        .attr("fill", "#FFC080"); // Texas Red fill for bars
+
+                    // Tooltips
+                    svg.selectAll("rect")
+                        .on("mouseover", (event, d) => {
+                            const tooltip = d3.select("body")
+                                .append("div")
+                                .attr("class", "tooltip")
+                                .style("position", "absolute")
+                                .style("visibility", "visible")
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px")
+                                .html(`Facility: ${d['Facility Name']}<br>MMR Vaccination Rate: ${(d.MMR * 100).toFixed(2)}%`);
+                        })
+                        .on("mouseout", () => {
+                            d3.select("body")
+                                .selectAll(".tooltip")
+                                .remove();
+                        });
+
+                    document.getElementById("chart-container").style.display = "block";
+                } else {
+                    alert("Please select at least one county.");
+                }
+            });
         });
     </script>
 </body>
