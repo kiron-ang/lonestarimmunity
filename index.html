@@ -6,99 +6,89 @@
     <title>Lone Star Immunity</title>
     <style>
         body {
-            background-color: black;
-            color: lightblue;
+            font-family: Arial, sans-serif;
         }
-        .node {
-            fill: lightblue;
-            stroke: white;
-        }
-        .link {
-            stroke: lightblue;
-            stroke-opacity: 0.6;
+        header {
+            text-align: center;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <svg width="800" height="600"></svg>
+    <header>
+        <h1>Lone Star Immunity</h1>
+        <p>Exploring Vaccination Rates in Texas</p>
+    </header>
+    <svg id="chart" width="800" height="600"></svg>
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        d3.csv('data.csv').then(data => {
-            // Convert percentages to float
-            for (const col of ['Tdap/Td', 'Meningococcal', 'Hepatitis A', 'Hepatitis B', 'MMR', 'Polio', 'Varicella']) {
-                data.forEach(d => d[col] = parseFloat(d[col].replace('%', '')));
-            }
+        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        const width = 800 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
 
-            // Create nodes and links for the graph
-            let nodes = [];
-            let links = [];
+        const svg = d3.select("#chart")
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-            // Create unique nodes for each school
-            data.forEach((school) => {
-                nodes.push({
-                    id: school['Facility Name'],
-                    county: school['County'],
-                    x: Math.random() * 700 + 50,  // Random initial position within bounds
-                    y: Math.random() * 500 + 50
-                });
+        d3.csv("data.csv").then(data => {
+            // Convert vaccination rates to numbers
+            data.forEach(d => {
+                d.MMR = parseFloat(d.MMR.replace("%", "")) / 100;
             });
 
-            // Generate links between schools in the same county
-            nodes.forEach((node1) => {
-                nodes.forEach((node2) => {
-                    if (node1 !== node2 && node1.county === node2.county) {
-                        links.push({
-                            source: node1.id,
-                            target: node2.id
-                        });
-                    }
-                });
-            });
+            // Scales
+            const xScale = d3.scaleBand()
+                .domain(data.map(d => d['Facility Name']))
+                .range([0, width])
+                .padding(0.2);
 
-            // Remove duplicate links
-            let uniqueLinks = [];
-            links.forEach((link) => {
-                const reverseLink = uniqueLinks.find((l) => l.source === link.target && l.target === link.source);
-                if (!reverseLink) {
-                    uniqueLinks.push(link);
-                }
-            });
-            links = uniqueLinks;
+            const yScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([height, 0]);
 
-            // D3 setup
-            const svg = d3.select("svg");
-            const width = svg.attr("width");
-            const height = svg.attr("height");
+            // Axes
+            const xAxis = d3.axisBottom(xScale);
+            const yAxis = d3.axisLeft(yScale).tickFormat(d => `${d * 100}%`);
 
-            const simulation = d3.forceSimulation(nodes)
-                .force("charge", d3.forceManyBody().strength(-100))
-                .force("link", d3.forceLink(links).distance(100))
-                .force("center", d3.forceCenter(width / 2, height / 2));
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(xAxis);
 
-            const link = svg.selectAll(".link")
-                .data(links)
+            svg.append("g")
+                .call(yAxis);
+
+            // Bars
+            svg.selectAll("rect")
+                .data(data)
                 .enter()
-                .append("line")
-                .attr("class", "link");
+                .append("rect")
+                .attr("x", d => xScale(d['Facility Name']))
+                .attr("y", d => yScale(d.MMR))
+                .attr("width", xScale.bandwidth())
+                .attr("height", d => height - yScale(d.MMR));
 
-            const node = svg.selectAll(".node")
-                .data(nodes)
-                .enter()
-                .append("circle")
-                .attr("class", "node")
-                .attr("r", 10);
-
-            simulation.on("tick", () => {
-                link
-                    .attr("x1", (d) => nodes.find(n => n.id === d.source).x)
-                    .attr("y1", (d) => nodes.find(n => n.id === d.source).y)
-                    .attr("x2", (d) => nodes.find(n => n.id === d.target).x)
-                    .attr("y2", (d) => nodes.find(n => n.id === d.target).y);
-
-                node
-                    .attr("cx", (d) => d.x)
-                    .attr("cy", (d) => d.y);
-            });
+            // Tooltips
+            svg.selectAll("rect")
+                .on("mouseover", (event, d) => {
+                    const tooltip = d3.select("body")
+                        .append("div")
+                        .style("position", "absolute")
+                        .style("visibility", "visible")
+                        .style("background-color", "white")
+                        .style("border", "solid")
+                        .style("border-width", "1px")
+                        .style("border-radius", "5px")
+                        .style("padding", "5px")
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px")
+                        .html(`Facility: ${d['Facility Name']}<br>MMR Vaccination Rate: ${d.MMR * 100}%`);
+                })
+                .on("mouseout", () => {
+                    d3.select("body")
+                        .selectAll("div")
+                        .remove();
+                });
         });
     </script>
 </body>
