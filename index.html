@@ -18,7 +18,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
         #selector-container {
             text-align: center;
@@ -48,12 +47,14 @@
 <body>
     <header>
         <h1>Lone Star Immunity</h1>
-        <h2>Exploring Vaccination Rates Among Texas Seventh Graders!</h2>
-        <p>This application visualizes vaccination rates across Texas schools for various vaccines.
-            Use the dropdown menus below to make a bar chart for different counties and vaccines!
+        <h2>Look at School Vaccination Rates Among Texas Seventh Graders!</h2>
+        <p>This website uses data from the Texas Department of State Health Services; every school year,
+            they survey schools to get percentages on how many seventh graders are vaccinated.
+            Use the dropdown menus below to make bar charts for different counties and vaccines!
             Click a bar to learn more about the school district that it represents.
-            The dotted line represents a vaccination rate of 85%. Note that herd immunity typically
-            needs 80% to 90% of people in a given group to be vaccinated.
+            The dotted line represents a vaccination rate of 85%. Note that herd immunity usually
+            needs 80% to 90% of people in a group to be vaccinated. Make as many bar charts as you want,
+            and contact Kiron Ang at kiron_ang1@baylor.edu for any questions, comments, or feedback!
         </p>
     </header>
 
@@ -82,8 +83,8 @@
         const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
         // Calculate chart width and height
-        const width = window.innerWidth - margin.left - margin.right;
-        const height = window.innerHeight - margin.top - margin.bottom;
+        const width = window.outerWidth - margin.left - margin.right;
+        const height = window.outerHeight - margin.top - margin.bottom;
 
         // Select the SVG element and append a group for the chart
         const chart = d3.select("#chart")
