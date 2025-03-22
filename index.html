@@ -115,11 +115,11 @@
                 const chartWidth = width - margin.left - margin.right;
                 const chartHeight = height - margin.top - margin.bottom;
 
-                // Create a group to hold the chart elements
-                const chart = svg.select("g") || svg.append("g")
-                    .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
                 chart.selectAll("*").remove(); // Clear existing chart elements
+
+                // Create a group to hold the chart elements
+                const chart = svg.append("g")
+                    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
                 const barWidth = chartWidth / filteredData.length;
                 
