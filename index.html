@@ -11,22 +11,18 @@
             background-color: #58A4B0;
             color: #F5F0F6;
         }
-        
         header {
             text-align: center;
         }
-        
         #chart-container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
         }
-        
         #selector-container {
             text-align: center;
         }
-        
         .tooltip {
             position: absolute;
             background-color: #58A4B0;
@@ -36,18 +32,12 @@
             padding: 5px;
             color: #F5F0F6;
         }
-        
         select, button {
             background-color: #58A4B0;
             color: #F5F0F6;
             border: none;
             padding: 8px;
             font-size: 16px;
-        }
-        
-        option {
-            background-color: #58A4B0;
-            color: #F5F0F6;
         }
     </style>
     
@@ -59,7 +49,12 @@
     <header>
         <h1>Lone Star Immunity</h1>
         <h2>Exploring Vaccination Rates Among Texas Seventh Graders!</h2>
-        <p>This application visualizes vaccination rates across Texas schools for various vaccines. Use the dropdown menus below to make a bar chart for different counties and vaccines! Click a bar to learn more about the school district that it represents.</p>
+        <p>This application visualizes vaccination rates across Texas schools for various vaccines. 
+            Use the dropdown menus below to make a bar chart for different counties and vaccines! 
+            Click a bar to learn more about the school district that it represents.
+            The dotted line represents a vaccination rate of 85%. Note that herd immunity typically
+            needs 80% to 90% of people in a given group to be vaccinated. 
+        </p>
     </header>
     
     <div id="selector-container">
@@ -85,22 +80,15 @@
     <script>
         const svg = d3.select("#chart");
         
+        // Function to resize chart
         function resizeChart() {
-            // Set the width and height of the chart based on the window size
             const width = window.innerWidth * 0.8; // 80% of the viewport width
             const height = window.innerHeight * 0.6; // 60% of the viewport height
 
             svg.attr("width", width)
                .attr("height", height);
 
-            const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-            const chartWidth = width - margin.left - margin.right;
-            const chartHeight = height - margin.top - margin.bottom;
-
-            const chart = svg.select("g") || svg.append("g")
-                .attr("transform", `translate(${margin.left}, ${margin.top})`);
-            
-            return { chart, chartWidth, chartHeight };
+            return { width, height };
         }
 
         let counties = [];
@@ -121,12 +109,21 @@
                 const filteredData = data.filter(d => d.County === selectedCounty);
                 filteredData.forEach(d => { d[selectedVaccine] = parseFloat(d[selectedVaccine]) / 100; });
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
-                
-                const { chart, chartWidth, chartHeight } = resizeChart();
-                
-                chart.selectAll("*").remove();
+
+                const { width, height } = resizeChart();
+                const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+                const chartWidth = width - margin.left - margin.right;
+                const chartHeight = height - margin.top - margin.bottom;
+
+                // Create a group to hold the chart elements
+                const chart = svg.select("g") || svg.append("g")
+                    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+                chart.selectAll("*").remove(); // Clear existing chart elements
+
                 const barWidth = chartWidth / filteredData.length;
                 
+                // Draw the bars
                 chart.selectAll("rect")
                     .data(filteredData)
                     .enter()
@@ -139,6 +136,7 @@
                     .on("mouseover", function () { d3.select(this).attr("fill", "#EF271B"); })
                     .on("mouseout", function () { d3.select(this).attr("fill", "#F5F0F6"); });
                 
+                // Add a horizontal line for reference
                 chart.append("line")
                     .attr("x1", 0)
                     .attr("y1", chartHeight - (0.85 * chartHeight))
@@ -146,7 +144,8 @@
                     .attr("y2", chartHeight - (0.85 * chartHeight))
                     .attr("stroke", "#58A4B0")
                     .attr("stroke-dasharray", "5,5");
-                
+
+                // Add tooltips on hover
                 chart.selectAll("rect")
                     .on("mouseover", (event, d) => {
                         d3.select("body").append("div").attr("class", "tooltip")
