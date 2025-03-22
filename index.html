@@ -103,6 +103,7 @@
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
                 const filteredData = data.filter(d => d.County === selectedCounty);
+                filteredData = filteredData.filter(d => !isNaN(d[selectedVaccine]));
                 const barWidth = width / filteredData.length;
                 filteredData.forEach(d => {d[selectedVaccine] = parseFloat(d[selectedVaccine]);});
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
@@ -119,7 +120,7 @@
                     d3.select(this).attr("fill", "#d90d0d");
                     const tooltip = d3.select("body").append("div")
                     .attr("class", "tooltip")
-                    .html(`${d['Facility Name']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
+                    .html(`${d['Facility Name']}<br>School Type: ${d['School Type']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
                     const tooltipWidth = tooltip.node().offsetWidth;
                     let left = event.pageX + 10;
                     let top = event.pageY - 28;
