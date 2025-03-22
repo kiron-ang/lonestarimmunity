@@ -171,7 +171,7 @@
                     .attr("y", d => height - (d[selectedVaccine] * height))
                     .attr("width", barWidth)
                     .attr("height", d => d[selectedVaccine] * height)
-                    .attr("fill", "#EF271B");
+                    .attr("fill", "#F5F0F6");
 
                 // Draw a line for herd immunity threshold
                 svg.append("line")
@@ -179,7 +179,7 @@
                     .attr("y1", height - (0.85 * height))
                     .attr("x2", width)
                     .attr("y2", height - (0.85 * height))
-                    .attr("stroke", "#F5F0F6")
+                    .attr("stroke", "#58A4B0")
                     .attr("stroke-dasharray", "5,5");
 
                 // Add tooltips for bars
