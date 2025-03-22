@@ -117,11 +117,16 @@
                 .attr("fill", "#ffffff")
                 .on("mouseover", function(event, d) {
                     d3.select(this).attr("fill", "#d90d0d");
-                    d3.select("body").append("div")
+                    const tooltip = d3.select("body").append("div")
                     .attr("class", "tooltip")
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 28) + "px")
                     .html(`${d['Facility Name']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
+                    const tooltipWidth = tooltip.node().offsetWidth;
+                    let left = event.pageX + 10;
+                    let top = event.pageY - 28;
+                    if (left + tooltipWidth > window.innerWidth) {
+                        left = event.pageX - tooltipWidth - 10;
+                    }
+                    tooltip.style("left", `${left}px`).style("top", `${top}px`);
                 })
                 .on("mouseout", function() {
                     d3.select(this).attr("fill", "#ffffff");
