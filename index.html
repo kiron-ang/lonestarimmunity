@@ -103,7 +103,7 @@
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
                 const countyData = data.filter(d => d.County === selectedCounty);
-                const filteredData = countyData.filter(d => d[selectedVaccine] !== "");
+                const filteredData = countyData.filter(d => d[selectedVaccine] !== "NR");
                 const barWidth = width / filteredData.length;
                 filteredData.forEach(d => {d[selectedVaccine] = parseFloat(d[selectedVaccine]);});
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
@@ -123,7 +123,7 @@
                     .html(`${d['Facility Name']}<br>School Type: ${d['School Type']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
                     const tooltipWidth = tooltip.node().offsetWidth;
                     let left = event.pageX + 10;
-                    let top = event.pageY - 28;
+                    let top = height / 2;
                     if (left + tooltipWidth > window.innerWidth) {
                         left = event.pageX - tooltipWidth - 10;
                     }
@@ -138,9 +138,9 @@
                 .attr("y1", height - (0.85 * height))
                 .attr("x2", width)
                 .attr("y2", height - (0.85 * height))
-                .attr("stroke", "#0056a9")
+                .attr("stroke", "#d90d0d")
                 .attr("stroke-dasharray", "10,10")
-                .attr("stroke-width", "3");
+                .attr("stroke-width", "5");
 
             });
         });
