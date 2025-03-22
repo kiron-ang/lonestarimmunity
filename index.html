@@ -115,6 +115,7 @@
             
             // When the button is clicked, draw the chart.
             document.getElementById("showDataButton").addEventListener("click", () => {
+                const barWidth = width / filteredData.length;
                 const selectedCounty = countySelect.value;
                 const selectedVaccine = document.getElementById("vaccine-select").value;
                 const filteredData = data.filter(d => d.County === selectedCounty);
@@ -126,10 +127,8 @@
                 filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
                 
                 // Clear existing chart elements.
-                chart.selectAll("*").remove();
-                
-                const barWidth = width / filteredData.length;
-                
+                chart.selectAll("rect").remove();
+                                
                 // Draw bars with combined event handlers for color change and tooltip.
                 chart.selectAll("rect")
                 .data(filteredData)
