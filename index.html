@@ -73,7 +73,7 @@
     </div>
 
     <div id="chart-container">
-        <svg id="chart"></svg>
+        <svg id="chart" width="100%" height="100%"></svg>
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -83,8 +83,8 @@
         const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
         // Calculate chart width and height
-        const width = window.outerWidth - margin.left - margin.right;
-        const height = window.outerHeight - margin.top - margin.bottom;
+        const width = svg.attr("width") - margin.left - margin.right;
+        const height = svg.attr("height") - margin.top - margin.bottom;
 
         // Select the SVG element and append a group for the chart
         const chart = d3.select("#chart")
