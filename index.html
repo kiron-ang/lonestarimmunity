@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lone Star Immunity</title>
@@ -59,7 +63,7 @@
 <body>
     <header>
         <h1>Lone Star Immunity</h1>
-        <p>Exploring Vaccination Rates in Texas</p>
+        <h2>Exploring Vaccination Rates in Texas</h2>
     </header>
     <div id="selector-container">
         <select id="county-select">
@@ -86,8 +90,8 @@
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        const width = 800;
-        const height = 600;
+        const width = 800 - 20;
+        const height = 600 - 20;
 
         const svg = d3.select("#chart")
             .append("g")
