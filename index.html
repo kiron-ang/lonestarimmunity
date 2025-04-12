@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lone Star Immunity</title>
+    <title>Lone Star Immunity | An Interactive Data Visualization Created by Kiron Ang</title>
     <style>
       :root {
         --primary-bg: #0056a9;
@@ -92,6 +92,49 @@
     </div>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
+      // Global variable to reference the currently drawn chart group
+      let currentChart = null;
+
+      // Function to create and insert the search bar if it doesn't exist
+      function addSearchBar(chartGroup) {
+        // Save reference to chart group
+        currentChart = chartGroup;
+        // If the search container doesn't exist, create it.
+        if (!document.getElementById("school-search-container")) {
+          const searchContainer = document.createElement("div");
+          searchContainer.id = "school-search-container";
+          searchContainer.style.textAlign = "center";
+          searchContainer.style.margin = "20px";
+
+          const searchInput = document.createElement("input");
+          searchInput.id = "school-search-input";
+          searchInput.type = "text";
+          searchInput.placeholder = "Search by Facility Name...";
+          searchInput.style.padding = "8px";
+          searchInput.style.fontSize = "16px";
+          searchInput.style.width = "300px";
+
+          searchContainer.appendChild(searchInput);
+          // Insert the search bar above the chart container
+          document.body.insertBefore(searchContainer, document.getElementById("chart-container"));
+
+          // Attach the input event listener; it uses the global variable "currentChart"
+          searchInput.addEventListener("input", function () {
+            const searchText = searchInput.value.trim().toLowerCase();
+            if (currentChart) {
+              currentChart.selectAll("rect")
+                .attr("stroke", function (d) {
+                  return (d["Facility Name"].toLowerCase().includes(searchText) && searchText) ? "#d90d0d" : "none";
+                })
+                .attr("stroke-width", function (d) {
+                  return (d["Facility Name"].toLowerCase().includes(searchText) && searchText) ? 3 : 0;
+                });
+            }
+          });
+        }
+      }
+
+      // Load CSV data and populate the county select
       d3.csv("data.csv").then((data) => {
         const uniqueCounties = [...new Set(data.map((d) => d.County))].sort();
         const countySelect = document.getElementById("county-select");
@@ -120,18 +163,26 @@
               .append("g")
               .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+            // Update the global variable for our current chart for the search functionality
+            currentChart = chart;
+
+            // Add the search bar (if not already added)
+            addSearchBar(chart);
+
             const selectedCounty = countySelect.value;
             const selectedVaccine = document.getElementById("vaccine-select").value;
             const countyData = data.filter((d) => d.County === selectedCounty);
+            // Filter out schools with "NR" values
             const filteredData = countyData.filter((d) => d[selectedVaccine] !== "NR");
             const barWidth = width / filteredData.length;
 
+            // Convert to numbers and sort data descending
             filteredData.forEach(
               (d) => (d[selectedVaccine] = parseFloat(d[selectedVaccine]))
             );
-
             filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
 
+            // Render the bars
             chart
               .selectAll("rect")
               .data(filteredData)
@@ -144,20 +195,22 @@
               .attr("fill", "#ffffff")
               .on("mouseover", function (event, d) {
                 d3.select(this).attr("fill", "#d90d0d");
+                // Build tooltip HTML. If 0%, append additional text.
+                let tooltipHTML = `${d["Facility Name"]}<br>${d["School Type"]}<br>${selectedVaccine}: ${d[selectedVaccine].toFixed(2)}%`;
+                if (d[selectedVaccine] === 0) {
+                  tooltipHTML += `<br>${d["Facility Name"]} has a 0% vaccination rate`;
+                }
                 const tooltip = d3
                   .select("body")
                   .append("div")
                   .attr("class", "tooltip")
-                  .html(
-                    `${d["Facility Name"]}<br>${d["School Type"]}<br>${selectedVaccine}: ${d[selectedVaccine].toFixed(2)}%`
-                  );
+                  .html(tooltipHTML);
 
                 let left = event.pageX;
                 let top = event.pageY - tooltip.node().offsetHeight;
                 if (left + tooltip.node().offsetWidth > window.innerWidth) {
                   left = event.pageX - tooltip.node().offsetWidth;
                 }
-
                 tooltip.style("left", `${left}px`).style("top", `${top}px`);
               })
               .on("mouseout", function () {
@@ -165,6 +218,7 @@
                 d3.select("body").selectAll(".tooltip").remove();
               });
 
+            // Add an additional line (or reference element)
             chart
               .append("line")
               .attr("x1", 0)
