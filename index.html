@@ -1,134 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lone Star Immunity</title>
     <style>
-        body {
-            font-family: sans-serif;
-            background-color: #0056a9;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            text-align: center;
-            padding: 1%;
-        }
-        #selector-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-            height: 80vh;
-        }
-        .tooltip {
-            position: absolute;
-            background-color: #0056a9;
-            border: solid 1px;
-            border-radius: 5px;
-            padding: 5px;
-            color: #ffffff;
-            pointer-events: none;
-        }
-        select, button {
-            background-color: #0056a9;
-            color: #ffffff;
-            border: 1px solid #ffffff;
-            padding: 8px;
-            font-size: 16px;
-            margin: 5px;
-        }
+      :root {
+        --primary-bg: #0056a9;
+        --primary-color: #ffffff;
+        --hover-color: #d90d0d;
+        --border: 1px solid var(--primary-color);
+      }
+
+      body {
+        font-family: sans-serif;
+        background-color: var(--primary-bg);
+        color: var(--primary-color);
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        text-align: center;
+        padding: 1%;
+      }
+
+      #selector-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #chart-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 80vh;
+      }
+
+      .tooltip {
+        position: absolute;
+        background-color: var(--primary-bg);
+        border: var(--border);
+        border-radius: 5px;
+        padding: 5px;
+        color: var(--primary-color);
+        pointer-events: none;
+      }
+
+      select,
+      button {
+        background-color: var(--primary-bg);
+        color: var(--primary-color);
+        border: var(--border);
+        padding: 8px;
+        font-size: 16px;
+        margin: 5px;
+        cursor: pointer;
+      }
+
+      select:focus,
+      button:focus {
+        outline: none;
+      }
+
+      button:hover {
+        background-color: var(--hover-color);
+        border-color: var(--hover-color);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>Lone Star Immunity</h1>
+      <h1>Lone Star Immunity</h1>
     </header>
     <div id="selector-container">
-        <select id="county-select"></select>
-        <select id="vaccine-select">
-            <option value="Hepatitis A">Hepatitis A</option>
-            <option value="Hepatitis B">Hepatitis B</option>
-            <option value="Meningococcal">Meningococcal</option>
-            <option value="MMR">MMR</option>
-            <option value="Polio">Polio</option>
-            <option value="Tdap/Td">Tdap/Td</option>
-            <option value="Varicella">Varicella</option>
-        </select>
-        <button id="showDataButton">Make a Chart!</button>
+      <select id="county-select"></select>
+      <select id="vaccine-select">
+        <option value="Hepatitis A">Hepatitis A</option>
+        <option value="Hepatitis B">Hepatitis B</option>
+        <option value="Meningococcal">Meningococcal</option>
+        <option value="MMR">MMR</option>
+        <option value="Polio">Polio</option>
+        <option value="Tdap/Td">Tdap/Td</option>
+        <option value="Varicella">Varicella</option>
+      </select>
+      <button id="showDataButton">Make a Chart!</button>
     </div>
     <div id="chart-container">
-        <svg width="100%" height="100%"></svg>
+      <svg width="100%" height="100%"></svg>
     </div>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
-        d3.csv("data.csv").then(data => {
-            const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
-            const countySelect = document.getElementById("county-select");
-            uniqueCounties.forEach(county => {
-                const option = document.createElement("option");
-                option.text = county;
-                option.value = county;
-                countySelect.appendChild(option);
-            });
-            document.getElementById("showDataButton").addEventListener("click", () => {
-                const svg = d3.select("svg");
-                svg.selectAll("g").remove();
-                const margin = {top: 10, right: 10, bottom: 10, left: 10};
-                const svgRect = svg.node().getBoundingClientRect();
-                const svgWidth = svgRect.width;
-                const svgHeight = svgRect.height;
-                const width = svgWidth - margin.left - margin.right;
-                const height = svgHeight - margin.top - margin.bottom;
-                const chart = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
-                const selectedCounty = countySelect.value;
-                const selectedVaccine = document.getElementById("vaccine-select").value;
-                const countyData = data.filter(d => d.County === selectedCounty);
-                const filteredData = countyData.filter(d => d[selectedVaccine] !== "NR");
-                const barWidth = width / filteredData.length;
-                filteredData.forEach(d => {d[selectedVaccine] = parseFloat(d[selectedVaccine]);});
-                filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
-                chart.selectAll("rect")
-                .data(filteredData)
-                .enter()
-                .append("rect")
-                .attr("x", (d, i) => i * barWidth)
-                .attr("y", d => height - (d[selectedVaccine] / 100 * height))
-                .attr("width", barWidth)
-                .attr("height", d => d[selectedVaccine] / 100 * height)
-                .attr("fill", "#ffffff")
-                .on("mouseover", function(event, d) {
-                    d3.select(this).attr("fill", "#d90d0d");
-                    const tooltip = d3.select("body").append("div")
-                    .attr("class", "tooltip")
-                    .html(`${d['Facility Name']}<br>${d['School Type']}<br>${selectedVaccine}: ${(d[selectedVaccine]).toFixed(2)}%`);
-                    let left = event.pageX;
-                    let top = event.pageY - tooltip.node().offsetHeight;
-                    if (left + tooltip.node().offsetWidth > window.innerWidth) {
-                        left = event.pageX - tooltip.node().offsetWidth;
-                    }
-                    tooltip.style("left", `${left}px`).style("top", `${top}px`);
-                })
-                .on("mouseout", function() {
-                    d3.select(this).attr("fill", "#ffffff");
-                    d3.select("body").selectAll(".tooltip").remove();
-                });
-                chart.append("line")
-                .attr("x1", 0)
-                .attr("y1", height - (0.85 * height))
-                .attr("x2", width)
-                .attr("y2", height - (0.85 * height))
-                .attr("stroke", "#d90d0d")
-                .attr("stroke-dasharray", "10,10")
-                .attr("stroke-width", "5");
-            });
+      d3.csv("data.csv").then((data) => {
+        const uniqueCounties = [...new Set(data.map((d) => d.County))].sort();
+        const countySelect = document.getElementById("county-select");
+
+        uniqueCounties.forEach((county) => {
+          const option = document.createElement("option");
+          option.text = county;
+          option.value = county;
+          countySelect.appendChild(option);
         });
+
+        document
+          .getElementById("showDataButton")
+          .addEventListener("click", () => {
+            const svg = d3.select("svg");
+            svg.selectAll("g").remove();
+
+            const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+            const svgRect = svg.node().getBoundingClientRect();
+            const svgWidth = svgRect.width;
+            const svgHeight = svgRect.height;
+            const width = svgWidth - margin.left - margin.right;
+            const height = svgHeight - margin.top - margin.bottom;
+
+            const chart = svg
+              .append("g")
+              .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+            const selectedCounty = countySelect.value;
+            const selectedVaccine = document.getElementById("vaccine-select").value;
+            const countyData = data.filter((d) => d.County === selectedCounty);
+            const filteredData = countyData.filter((d) => d[selectedVaccine] !== "NR");
+            const barWidth = width / filteredData.length;
+
+            filteredData.forEach(
+              (d) => (d[selectedVaccine] = parseFloat(d[selectedVaccine]))
+            );
+
+            filteredData.sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
+
+            chart
+              .selectAll("rect")
+              .data(filteredData)
+              .enter()
+              .append("rect")
+              .attr("x", (d, i) => i * barWidth)
+              .attr("y", (d) => height - (d[selectedVaccine] / 100) * height)
+              .attr("width", barWidth)
+              .attr("height", (d) => (d[selectedVaccine] / 100) * height)
+              .attr("fill", "#ffffff")
+              .on("mouseover", function (event, d) {
+                d3.select(this).attr("fill", "#d90d0d");
+                const tooltip = d3
+                  .select("body")
+                  .append("div")
+                  .attr("class", "tooltip")
+                  .html(
+                    `${d["Facility Name"]}<br>${d["School Type"]}<br>${selectedVaccine}: ${d[selectedVaccine].toFixed(2)}%`
+                  );
+
+                let left = event.pageX;
+                let top = event.pageY - tooltip.node().offsetHeight;
+                if (left + tooltip.node().offsetWidth > window.innerWidth) {
+                  left = event.pageX - tooltip.node().offsetWidth;
+                }
+
+                tooltip.style("left", `${left}px`).style("top", `${top}px`);
+              })
+              .on("mouseout", function () {
+                d3.select(this).attr("fill", "#ffffff");
+                d3.select("body").selectAll(".tooltip").remove();
+              });
+
+            chart
+              .append("line")
+              .attr("x1", 0)
+              .attr("y1", height - 0.85 * height)
+              .attr("x2", width)
+              .attr("y2", height - 0.85 * height)
+              .attr("stroke", "#d90d0d")
+              .attr("stroke-dasharray", "10,10")
+              .attr("stroke-width", "5");
+          });
+      });
     </script>
-</body>
+  </body>
 </html>
