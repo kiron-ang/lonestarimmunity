@@ -1,1 +1,7 @@
-Lone Star Immunity is an interactive data visualization created and maintained by Kiron Ang. Learn more about seventh grade vaccination rates in Texas schools: https://kiron-ang.github.io/lonestarimmunity.
+Hi, Dr. Wilkerson!
+
+After reviewing the "Chartability Workbook" (https://chartability.github.io/POUR-CAF), I think
+
+Sincerely,
+
+Kiron Ang
