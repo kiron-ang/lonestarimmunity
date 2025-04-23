@@ -1,235 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Character encoding and responsive viewport settings -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lone Star Immunity</title>
+
+  <!-- Page title and author metadata -->
+  <title>Lone Star Immunity | Interactive Public Health Data Visualization by Kiron Ang</title>
   <meta name="author" content="Kiron Ang" />
+
+  <!-- Include D3.js v7 from CDN for data-driven SVG visualization -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- CSS styles -->
   <style>
-    /* Base resets & layout */
+    /* CSS custom properties for consistent theming */
+    :root {
+      --blue:   #0056a9;
+      --white:  #ffffff;
+      --red:    #d90d0d;
+    }
+    /* Global box model and reset */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background-color: #ffffff;
-      color: #0056a9;
       display: flex;
       flex-direction: column;
       height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--white);
+      color: var(--blue);
     }
+    /* Header and footer styling */
     header, footer {
       text-align: center;
       padding: 1rem;
-      background: #ffffff;
+      background: var(--white);
     }
-    header h1 {
-      font-size: 2rem;
-      color: #0056a9;
-    }
-    header p {
-      margin-top: .5rem;
-      font-size: 1rem;
-    }
-    footer p {
-      font-size: .8rem;
-      color: #0056a9;
-    }
+    header h1 { font-size: 2rem; color: var(--blue); }
+    header p  { margin-top: .5rem; }
+    footer p  { font-size: .8rem; }
 
-    /* Controls */
+    /* Controls container */
     #controls {
       padding: 1rem;
-      background: #ffffff;
-      text-align: center;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
     }
+    /* District search input */
     #district-input {
       width: 80%;
       max-width: 400px;
-      font-size: 1rem;
       padding: .5rem;
-      border: 2px solid #0056a9;
+      font-size: 1rem;
+      border: 2px solid var(--blue);
       border-radius: 4px;
-      color: #0056a9;
-      background: #ffffff;
+      background: var(--white);
+      color: var(--blue);
+    }
+    /* Info card to display selected district details */
+    .info-card {
+      width: 80%;
+      max-width: 400px;
+      background: var(--white);
+      border-left: 4px solid var(--blue);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1rem;
+      text-align: left;
+      font-size: .95rem;
+      color: var(--blue);
+    }
+    .info-card .label {
+      font-weight: bold;
+      color: var(--red);
     }
 
-    /* Chart fills most of screen */
+    /* Main chart SVG fills remaining space */
     #chart {
       flex-grow: 1;
       width: 100%;
       height: 100%;
-      background: #ffffff;
     }
+    /* Styles for bars and axes */
+    .bar { fill: var(--blue); }
+    .bar.low { fill: var(--red); } /* low coverage bars in red */
+    .axis path, .axis line { stroke: var(--blue); }
+    .axis text { fill: var(--blue); font-size: .9rem; }
 
-    /* Bars & axes */
-    .bar { fill: #0056a9; }
-    .bar.low { fill: #d90d0d; }
-    .axis path, .axis line {
-      stroke: #0056a9;
-    }
-    .axis text {
-      fill: #0056a9;
-      font-size: .9rem;
-    }
-
-    /* Threshold line & label */
+    /* Recommended threshold line at 95% */
     .threshold-line {
-      stroke: #d90d0d;
+      stroke: var(--red);
       stroke-dasharray: 4 4;
       stroke-width: 2px;
     }
     .threshold-label {
-      fill: #d90d0d;
-      font-size: 0.9rem;
+      fill: var(--red);
+      font-size: .9rem;
       text-anchor: end;
     }
 
-    /* Message */
+    /* Message area styling */
     #message {
-      padding: 1rem;
       text-align: center;
+      padding: .75rem;
       font-size: 1rem;
     }
   </style>
 </head>
 <body>
+  <!-- Page header -->
   <header>
     <h1>Lone Star Immunity</h1>
-    <p>Select your district to view vaccination coverage</p>
+    <p>Type to search districts &amp; view vaccination coverage</p>
   </header>
 
+  <!-- Controls: search input + info panel -->
   <div id="controls">
     <input
       type="text"
       id="district-input"
       list="district-list"
-      placeholder="Type to search districts..."
+      placeholder="Start typing district name..."
       autocomplete="off"
     />
     <datalist id="district-list"></datalist>
+    <div id="info-panel" class="info-card">
+      <!-- Initial prompt before selection -->
+      <span class="label">Select a district to see details.</span>
+    </div>
   </div>
 
+  <!-- SVG container for D3 chart -->
   <svg id="chart"></svg>
 
+  <!-- Dynamic message about coverage -->
   <div id="message"></div>
 
+  <!-- Page footer -->
   <footer>
     <p>© Kiron Ang</p>
   </footer>
 
+  <!-- JavaScript: D3 data loading and visualization logic -->
   <script>
+    // Select the SVG and set margins
     const svg = d3.select("#chart"),
-          margin = { top: 40, right: 30, bottom: 80, left: 70 },
-          width = svg.node().clientWidth - margin.left - margin.right,
-          height = svg.node().clientHeight - margin.top - margin.bottom,
+          margin = { top: 40, right: 30, bottom: 120, left: 70 },
+          width  = svg.node().clientWidth  - margin.left - margin.right,
+          height = svg.node().clientHeight - margin.top  - margin.bottom,
+          // Append a <g> translated by the margins
           g = svg
-            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom + 40}`)
+            .style("padding-bottom", "40px")
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // Define scales for x (band) and y (linear)
     const x = d3.scaleBand().padding(0.2).range([0, width]),
           y = d3.scaleLinear().range([height, 0]);
 
-    const xAxisGroup = g.append("g")
-        .attr("class", "axis")
-        .attr("transform", `translate(0,${height})`);
-    const yAxisGroup = g.append("g").attr("class", "axis");
+    // Create groups for the x- and y-axes
+    const xAxisG = g.append("g")
+        .attr("class","axis")
+        .attr("transform",`translate(0,${height})`);
+    const yAxisG = g.append("g").attr("class","axis");
 
-    // threshold line & label
+    // Draw a horizontal threshold line at 95%
     g.append("line")
-      .attr("class", "threshold-line")
-      .attr("x1", 0)
-      .attr("x2", width)
-      .attr("y1", y(95))
-      .attr("y2", y(95));
+      .attr("class","threshold-line")
+      .attr("x1",0).attr("x2",width)
+      .attr("y1", y(95)).attr("y2", y(95));
+    // Label for the threshold line
     g.append("text")
-      .attr("class", "threshold-label")
+      .attr("class","threshold-label")
       .attr("x", width)
-      .attr("y", y(95) - 5)
+      .attr("y", y(95)-5)
       .text("95% recommended");
 
+    // Load CSV, parsing percentages and normalizing facility names
     d3.csv("data.csv", d => {
-      // convert percentages to numbers
       for (let k in d) {
-        if (d[k].endsWith("%")) d[k] = +d[k].replace("%", "");
+        if (d[k].endsWith("%")) {
+          // Convert "95%" strings to numeric 95
+          d[k] = +d[k].replace("%","");
+        }
       }
-      // uppercase facility name
+      // Uppercase facility names for consistency
       d["Facility Name"] = d["Facility Name"].toUpperCase();
       return d;
     }).then(data => {
+      // Assume vaccine columns start at index 5
       const vaccineCols = data.columns.slice(5);
 
-      // populate datalist
-      const list = d3.select("#district-list");
-      list.selectAll("option")
+      // Populate the <datalist> for autocomplete
+      d3.select("#district-list")
+        .selectAll("option")
         .data(data.map(d => d["Facility Name"]))
         .join("option")
           .attr("value", d => d);
 
-      // initial render
-      updateChart(data[0]);
+      // Initialize chart/info panel with the first row
+      updateAll(data[0]);
 
-      // search input
-      const input = d3.select("#district-input");
-      input.on("change", () => {
-        const val = input.property("value").toUpperCase();
-        const row = data.find(d => d["Facility Name"] === val);
-        if (row) updateChart(row);
+      // Listen for user selection in the input
+      d3.select("#district-input").on("change", function(){
+        const val = this.value.toUpperCase(),
+              row = data.find(d => d["Facility Name"] === val);
+        if (row) updateAll(row);
       });
 
+      // Update both info panel and chart
+      function updateAll(district) {
+        updateInfoPanel(district);
+        updateChart(district);
+      }
+
+      // Fill the info panel with selected district details
+      function updateInfoPanel(d) {
+        d3.select("#info-panel").html(`
+          <div><span class="label">District:</span> ${d["Facility Name"]}</div>
+          <div><span class="label">County:</span>   ${d.County}</div>
+          <div><span class="label">Type:</span>     ${d["School Type"]}</div>
+        `);
+      }
+
+      // Render or update the bar chart for the selected district
       function updateChart(district) {
-        const chartData = vaccineCols.map(v => ({
-          vaccine: v,
-          value: district[v]
-        }));
+        // Build an array of { vaccine, value } for the bars
+        const chartData = vaccineCols.map(v => ({ vaccine: v, value: district[v] }));
+        x.domain(chartData.map(d => d.vaccine)); // set x domain to vaccine names
+        y.domain([0, 100]);                      // y from 0% to 100%
 
-        x.domain(chartData.map(d => d.vaccine));
-        y.domain([0, 100]);
+        // Draw x-axis with rotated labels
+        xAxisG.call(d3.axisBottom(x))
+              .selectAll("text")
+                .attr("transform","rotate(-45)")
+                .style("text-anchor","end");
+        // Draw y-axis with percent ticks
+        yAxisG.call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
 
-        xAxisGroup.call(d3.axisBottom(x))
-          .selectAll("text")
-            .attr("transform", "rotate(-45)")
-            .style("text-anchor", "end");
-
-        yAxisGroup.call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
-
+        // DATA JOIN: bind chartData to rectangles
         const bars = g.selectAll(".bar")
           .data(chartData, d => d.vaccine);
 
         bars.join(
           enter => enter.append("rect")
-                        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+                        .attr("class", d => d.value < 95 ? "bar low" : "bar")    // low-coverage styling
                         .attr("x", d => x(d.vaccine))
-                        .attr("y", y(0))
+                        .attr("y", y(0))                                         // start from bottom
                         .attr("width", x.bandwidth())
-                        .attr("height", 0)
+                        .attr("height", 0)                                       // start with zero height
                       .call(enter => enter.transition()
                         .duration(700)
-                        .attr("y", d => y(d.value))
+                        .attr("y", d => y(d.value))                             // animate up to value
                         .attr("height", d => height - y(d.value))),
           update => update
-                        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+                        .attr("class", d => d.value < 95 ? "bar low" : "bar")    // update class
                       .call(update => update.transition()
                         .duration(700)
                         .attr("x", d => x(d.vaccine))
                         .attr("y", d => y(d.value))
                         .attr("width", x.bandwidth())
                         .attr("height", d => height - y(d.value))),
-          exit => exit.remove()
+          exit => exit.remove()                                           // remove old bars
         );
 
-        const low = chartData.filter(d => d.value < 95);
-        const msg = low.length
-          ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — consult your pediatrician.`
-          : `All vaccines ≥ 95%. Thank you for protecting our community!`;
+        // Build a message about vaccines below threshold
+        const low = chartData.filter(d => d.value < 95),
+              msg = low.length
+                ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — consult your pediatrician.`
+                : `All vaccines ≥ 95%. Thank you for protecting our community!`;
+
+        // Display the message and color it red if any are below threshold
         d3.select("#message")
           .text(msg)
-          .style("color", low.length ? "#d90d0d" : "#0056a9");
+          .style("color", low.length ? "var(--red)" : "var(--blue)");
       }
-    }).catch(err => {
+    })
+    .catch(err => {
+      // Handle errors loading the CSV (e.g., missing file)
       console.error(err);
       d3.select("body").append("p")
-        .text("Error loading data.csv. Ensure it's alongside index.html.")
-        .style("color", "#d90d0d")
+        .text("Error loading data.csv—make sure it sits next to index.html.")
+        .style("color", "var(--red)")
         .style("text-align", "center")
         .style("padding", "1rem");
     });
