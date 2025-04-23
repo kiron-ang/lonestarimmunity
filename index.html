@@ -1,271 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Lone Star Immunity | An Interactive Data Visualization Created by Kiron Ang</title>
-    <style>
-      /* Base page styling */
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-        background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-        color: #333;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LONE STAR IMMUNITY | KIRON ANG</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: #ffffff;
+      color: #333333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2em;
+      color: #0056a9;
+    }
+    header p {
+      margin: 5px 0 0;
+      font-size: 1.1em;
+      color: #555555;
+    }
+    #controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #district-select {
+      font-size: 1em;
+      padding: 5px 10px;
+      border: 2px solid #0056a9;
+      border-radius: 4px;
+      background-color: #ffffff;
+      color: #0056a9;
+    }
+    #message {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 1.1em;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+    .bar {
+      fill: #0056a9;
+    }
+    .bar.low {
+      fill: #d90d0d;
+    }
+    .axis path,
+    .axis line {
+      stroke: #cccccc;
+    }
+    .threshold-line {
+      stroke: #d90d0d;
+      stroke-dasharray: 4 4;
+      stroke-width: 2px;
+    }
+    .threshold-label {
+      fill: #d90d0d;
+      font-size: 0.9em;
+      text-anchor: end;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Vaccination Coverage by School District</h1>
+    <p>Select your district to see current coverage rates</p>
+  </header>
 
-      /* Selector bar at top */
-      #selector-container {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        background: #fff;
-        padding: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
-      #selector-container select,
-      #selector-container button {
-        font-size: 16px;
-        padding: 8px 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        transition: border-color .3s, box-shadow .3s;
-      }
-      #selector-container select:focus,
-      #selector-container button:focus {
-        outline: none;
-        border-color: #d90d0d;
-        box-shadow: 0 0 5px rgba(217, 13, 13, 0.4);
-      }
-      #showDataButton {
-        background: #d90d0d;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-        transition: background .3s;
-      }
-      #showDataButton:hover {
-        background: #b80b0b;
-      }
+  <div id="controls">
+    <select id="district-select"></select>
+  </div>
 
-      /* Chart container styling */
-      #chart-container {
-        max-width: 1200px;
-        margin: 20px auto;
-        padding: 20px;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border-radius: 8px;
-      }
-      /* Draw a solid border around the SVG */
-      #chart-container svg {
-        display: block;
-        border: 2px solid #ccc;
-        border-radius: 4px;
-        overflow: visible;  /* allow tooltips & axis ticks to show */
-      }
+  <svg id="chart" width="800" height="400"></svg>
 
-      /* Tooltip styling */
-      .tooltip {
-        position: absolute;
-        background: rgba(0,0,0,0.75);
-        color: #fff;
-        padding: 8px;
-        border-radius: 4px;
-        font-size: 14px;
-        pointer-events: none;
-        line-height: 1.4;
-      }
+  <div id="message"></div>
 
-      /* Axis styling */
-      .axis path,
-      .axis line {
-        stroke: #ccc;
-      }
-      .axis text {
-        fill: #666;
-        font-size: 12px;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Dropdowns and button for user interaction -->
-    <div id="selector-container">
-      <select id="county-select"></select> <!-- Populated dynamically -->
-      <select id="vaccine-select">
-        <option value="Hepatitis A">Hepatitis A</option>
-        <option value="Hepatitis B">Hepatitis B</option>
-        <option value="Meningococcal">Meningococcal</option>
-        <option value="MMR">MMR</option>
-        <option value="Polio">Polio</option>
-        <option value="Tdap/Td">Tdap/Td</option>
-        <option value="Varicella">Varicella</option>
-      </select>
-      <button id="showDataButton">Make a Chart!</button>
-    </div>
+  <script>
+    const svg = d3.select("#chart"),
+          margin = { top: 20, right: 30, bottom: 50, left: 60 },
+          width = +svg.attr("width") - margin.left - margin.right,
+          height = +svg.attr("height") - margin.top - margin.bottom,
+          g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    <!-- Container for the D3 chart SVG -->
-    <div id="chart-container">
-      <svg width="100%" height="500"></svg>
-    </div>
+    const x = d3.scaleBand().padding(0.2).range([0, width]),
+          y = d3.scaleLinear().range([height, 0]);
 
-    <!-- Include D3.js library -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script>
-      let currentChart = null;
+    const xAxisGroup = g.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height})`);
+    const yAxisGroup = g.append("g").attr("class", "axis");
 
-      function addSearchBar(chartGroup) {
-        currentChart = chartGroup;
-        if (!document.getElementById("school-search-container")) {
-          const searchContainer = document.createElement("div");
-          searchContainer.id = "school-search-container";
-          searchContainer.style.textAlign = "center";
-          searchContainer.style.margin = "20px";
+    // Draw threshold line at 95%
+    g.append("line")
+      .attr("class", "threshold-line")
+      .attr("x1", 0)
+      .attr("x2", width)
+      .attr("y1", y(95))
+      .attr("y2", y(95));
 
-          const searchInput = document.createElement("input");
-          searchInput.id = "school-search-input";
-          searchInput.type = "text";
-          searchInput.placeholder = "Search by Facility Name...";
-          searchInput.style.padding = "8px";
-          searchInput.style.fontSize = "16px";
-          searchInput.style.width = "300px";
+    g.append("text")
+      .attr("class", "threshold-label")
+      .attr("x", width)
+      .attr("y", y(95) - 5)
+      .text("95% recommended");
 
-          searchContainer.appendChild(searchInput);
-          document.body.insertBefore(
-            searchContainer,
-            document.getElementById("chart-container")
-          );
-
-          searchInput.addEventListener("input", function () {
-            const searchText = searchInput.value.trim().toLowerCase();
-            if (currentChart) {
-              currentChart
-                .selectAll("rect")
-                .attr("stroke", d =>
-                  d["Facility Name"].toLowerCase().includes(searchText) && searchText
-                    ? "#d90d0d"
-                    : "none"
-                )
-                .attr("stroke-width", d =>
-                  d["Facility Name"].toLowerCase().includes(searchText) && searchText
-                    ? 3
-                    : 0
-                );
-            }
-          });
+    d3.csv("data.csv", d => {
+      // parse all vaccine % strings into numbers
+      for (let k in d) {
+        if (d[k].endsWith("%")) {
+          d[k] = +d[k].replace("%", "");
         }
       }
+      return d;
+    }).then(data => {
+      // Identify vaccine columns by slicing off the first 5 metadata fields
+      const vaccineCols = data.columns.slice(5);
 
-      d3.csv("data.csv").then(data => {
-        const uniqueCounties = [...new Set(data.map(d => d.County))].sort();
-        const countySelect = document.getElementById("county-select");
-        uniqueCounties.forEach(county => {
-          const option = document.createElement("option");
-          option.text = county;
-          option.value = county;
-          countySelect.appendChild(option);
-        });
+      // Populate dropdown
+      const select = d3.select("#district-select");
+      select.selectAll("option")
+        .data(data)
+        .join("option")
+          .attr("value", d => d["Facility Name"])
+          .text(d => d["Facility Name"]);
 
-        document
-          .getElementById("showDataButton")
-          .addEventListener("click", () => {
-            const svg = d3.select("svg");
-            svg.selectAll("*").remove();
+      // Initial draw
+      updateChart(data[0]);
 
-            const margin = { top: 10, right: 10, bottom: 30, left: 50 };
-            const svgWidth = +svg.node().getBoundingClientRect().width;
-            const svgHeight = +svg.node().getBoundingClientRect().height;
-            const width = svgWidth - margin.left - margin.right;
-            const height = svgHeight - margin.top - margin.bottom;
-
-            const chart = svg
-              .append("g")
-              .attr("transform", `translate(${margin.left},${margin.top})`);
-
-            currentChart = chart;
-            addSearchBar(chart);
-
-            const selectedCounty = countySelect.value;
-            const selectedVaccine = document.getElementById(
-              "vaccine-select"
-            ).value;
-
-            const countyData = data.filter(d => d.County === selectedCounty);
-            const filteredData = countyData
-              .filter(d => d[selectedVaccine] !== "NR")
-              .map(d => {
-                d[selectedVaccine] = +d[selectedVaccine];
-                return d;
-              })
-              .sort((a, b) => b[selectedVaccine] - a[selectedVaccine]);
-
-            // Y scale & axis
-            const yScale = d3.scaleLinear()
-              .domain([0, d3.max(filteredData, d => d[selectedVaccine])])
-              .range([height, 0]);
-
-            const yAxis = d3.axisLeft(yScale)
-              .ticks(5)
-              .tickFormat(d => d + "%");
-
-            chart.append("g")
-              .attr("class", "axis")
-              .call(yAxis);
-
-            // X scale & bar width
-            const xScale = d3.scaleBand()
-              .domain(filteredData.map(d => d["Facility Name"]))
-              .range([0, width])
-              .padding(0.1);
-
-            // Draw bars
-            chart.selectAll("rect")
-              .data(filteredData)
-              .enter()
-              .append("rect")
-              .attr("x", d => xScale(d["Facility Name"]))
-              .attr("y", d => yScale(d[selectedVaccine]))
-              .attr("width", xScale.bandwidth())
-              .attr("height", d => height - yScale(d[selectedVaccine]))
-              .attr("fill", "#ffffff")
-              .on("mouseover", function(event, d) {
-                d3.select(this).attr("fill", "#d90d0d");
-                let tooltipHTML = `
-                  ${d["Facility Name"]}<br>
-                  ${d["School Type"]}<br>
-                  ${selectedVaccine}: ${d[selectedVaccine].toFixed(2)}%
-                `;
-                if (d[selectedVaccine] === 0) {
-                  tooltipHTML += `<br>${d["Facility Name"]} has a 0% vaccination rate`;
-                }
-                const tooltip = d3.select("body")
-                  .append("div")
-                  .attr("class", "tooltip")
-                  .html(tooltipHTML);
-
-                let left = event.pageX;
-                let top = event.pageY - tooltip.node().offsetHeight;
-                if (left + tooltip.node().offsetWidth > window.innerWidth) {
-                  left = event.pageX - tooltip.node().offsetWidth;
-                }
-                tooltip.style("left", left + "px")
-                       .style("top", top + "px");
-              })
-              .on("mouseout", function() {
-                d3.select(this).attr("fill", "#ffffff");
-                d3.selectAll(".tooltip").remove();
-              });
-
-            // X-axis (optional: rotate labels if too crowded)
-            const xAxis = d3.axisBottom(xScale).tickFormat("");
-            chart.append("g")
-              .attr("class", "axis")
-              .attr("transform", `translate(0,${height})`)
-              .call(xAxis);
-          });
+      // On change
+      select.on("change", function() {
+        const name = this.value;
+        const row = data.find(d => d["Facility Name"] === name);
+        updateChart(row);
       });
-    </script>
-  </body>
+
+      function updateChart(district) {
+        // Prepare data
+        const chartData = vaccineCols.map(v => ({ vaccine: v, value: district[v] }));
+        x.domain(chartData.map(d => d.vaccine));
+        y.domain([0, 100]);
+
+        // X Axis
+        xAxisGroup.call(d3.axisBottom(x))
+          .selectAll("text")
+          .attr("transform", "rotate(-40)")
+          .style("text-anchor", "end");
+
+        // Y Axis
+        yAxisGroup.call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
+
+        // Bars
+        const bars = g.selectAll(".bar")
+          .data(chartData, d => d.vaccine);
+
+        bars.join(
+          enter => enter.append("rect")
+                        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+                        .attr("x", d => x(d.vaccine))
+                        .attr("y", y(0))
+                        .attr("width", x.bandwidth())
+                        .attr("height", 0)
+                      .call(enter => enter.transition()
+                        .duration(800)
+                        .attr("y", d => y(d.value))
+                        .attr("height", d => height - y(d.value))),
+          update => update
+                        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+                      .call(update => update.transition()
+                        .duration(800)
+                        .attr("x", d => x(d.vaccine))
+                        .attr("y", d => y(d.value))
+                        .attr("width", x.bandwidth())
+                        .attr("height", d => height - y(d.value))),
+          exit => exit.remove()
+        );
+
+        // Message
+        const low = chartData.filter(d => d.value < 95);
+        const msg = low.length
+          ? `Coverage below recommended 95% for: ${low.map(d => d.vaccine).join(", ")}. Please consult your pediatrician.`
+          : `Great job! All vaccines meet or exceed the 95% recommendation. Thank you for protecting your community.`;
+        d3.select("#message").text(msg).style("color", low.length ? "#d90d0d" : "#0056a9");
+      }
+    }).catch(err => {
+      console.error("Error loading or parsing data.csv:", err);
+      d3.select("body").append("p")
+        .text("Failed to load vaccination data. Make sure data.csv is in the same folder as index.html.")
+        .style("color", "#d90d0d");
+    });
+  </script>
+</body>
 </html>
