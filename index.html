@@ -17,6 +17,11 @@
 
     #controls { padding: 1rem; background: var(--white); display: flex; flex-direction: column; align-items: center; gap: 1rem; position: relative; }
     #district-input { width: 80%; max-width: 400px; padding: .5rem; font-size: 1rem; border: 2px solid var(--blue); border-radius: 4px; }
+    #district-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 86, 169, 0.3);
+    }
     #suggestions { list-style: none; position: absolute; top: 3.5rem; width: 80%; max-width: 400px; background: var(--white); border: 1px solid var(--blue); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 10; }
     #suggestions li { padding: .5rem; cursor: pointer; }
     #suggestions li:hover { background: var(--blue); color: var(--white); }
@@ -31,6 +36,22 @@
     .threshold-line { stroke: var(--red); stroke-dasharray: 4 4; stroke-width: 2px; }
     .threshold-label { fill: var(--red); font-size: .9rem; text-anchor: end; }
     #message { text-align: center; padding: .75rem; font-size: 1rem; }
+
+    /* Tooltip styling */
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+      background: var(--white);
+      color: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -50,18 +71,34 @@
   <footer><p>© Kiron Ang</p></footer>
 
   <script>
+    // Create tooltip container
+    const tooltip = d3.select("body")
+      .append("div")
+        .attr("id", "tooltip");
+
     const svg = d3.select("#chart"),
           margin = { top: 40, right: 30, bottom: 120, left: 70 },
           width = svg.node().clientWidth - margin.left - margin.right,
           height = svg.node().clientHeight - margin.top - margin.bottom,
           g = svg.attr("viewBox", `0 0 ${width+margin.left+margin.right} ${height+margin.top+margin.bottom+40}`)
                  .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
     const x = d3.scaleBand().padding(0.2).range([0, width]),
           y = d3.scaleLinear().range([height, 0]);
+
     const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${height})`);
     const yAxisG = g.append("g").attr("class","axis");
-    g.append("line").attr("class","threshold-line").attr("x1",0).attr("x2",width).attr("y1", y(95)).attr("y2", y(95));
-    g.append("text").attr("class","threshold-label").attr("x", width).attr("y", y(95)-5).text("95% recommended");
+
+    g.append("line")
+      .attr("class","threshold-line")
+      .attr("x1",0).attr("x2",width)
+      .attr("y1", y(95)).attr("y2", y(95));
+
+    g.append("text")
+      .attr("class","threshold-label")
+      .attr("x", width)
+      .attr("y", y(95) - 5)
+      .text("95% recommended");
 
     d3.csv("data.csv", d => {
       for (let k in d) if (d[k].endsWith("%")) d[k] = +d[k].replace('%','');
@@ -97,6 +134,7 @@
         updateInfoPanel(row);
         updateChart(row);
       }
+
       function updateInfoPanel(d) {
         d3.select("#info-panel").html(`
           <div><span class="label">District:</span> ${d["Facility Name"]}</div>
@@ -104,31 +142,61 @@
           <div><span class="label">Type:</span> ${d["School Type"]}</div>
         `);
       }
+
       function updateChart(district) {
         const chartData = vaccineCols.map(v=>({vaccine:v,value:district[v]}));
-        x.domain(chartData.map(d=>d.vaccine)); y.domain([0,100]);
-        xAxisG.call(d3.axisBottom(x)).selectAll("text").attr("transform","rotate(-45)").style("text-anchor","end");
+        x.domain(chartData.map(d=>d.vaccine)); 
+        y.domain([0,100]);
+
+        xAxisG.call(d3.axisBottom(x))
+          .selectAll("text")
+          .attr("transform","rotate(-45)")
+          .style("text-anchor","end");
+
         yAxisG.call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+"%"));
+
         const bars = g.selectAll(".bar").data(chartData, d=>d.vaccine);
+
         bars.join(
-          enter=> enter.append("rect").attr("class",d=>d.value<95?"bar low":"bar")
-                          .attr("x",d=>x(d.vaccine)).attr("y",y(0))
-                          .attr("width",x.bandwidth()).attr("height",0)
-                          .call(e=>e.transition().duration(700)
-                                     .attr("y",d=>y(d.value))
-                                     .attr("height",d=>height-y(d.value))),
-          update=> update.attr("class",d=>d.value<95?"bar low":"bar")
-                        .call(u=>u.transition().duration(700)
-                                     .attr("x",d=>x(d.vaccine))
-                                     .attr("y",d=>y(d.value))
-                                     .attr("width",x.bandwidth())
-                                     .attr("height",d=>height-y(d.value))),
-          exit=> exit.remove()
-        );
+          enter => enter.append("rect")
+                        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+                        .attr("x", d => x(d.vaccine))
+                        .attr("y", y(0))
+                        .attr("width", x.bandwidth())
+                        .attr("height", 0)
+                        .call(e => e.transition().duration(700)
+                                     .attr("y", d => y(d.value))
+                                     .attr("height", d => height - y(d.value))),
+          update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
+                          .call(u => u.transition().duration(700)
+                                       .attr("x", d => x(d.vaccine))
+                                       .attr("y", d => y(d.value))
+                                       .attr("width", x.bandwidth())
+                                       .attr("height", d => height - y(d.value))),
+          exit => exit.remove()
+        )
+        .on("mouseover", (event, d) => {
+          tooltip
+            .style("opacity", 1)
+            .html(`${d.value}%`);
+        })
+        .on("mousemove", (event) => {
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top",  (event.pageY - 20) + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.style("opacity", 0);
+        });
+
         const low = chartData.filter(d=>d.value<95);
-        const msg = low.length ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — consult your pediatrician.`
-                                : `All vaccines ≥ 95%. Thank you for protecting our community!`;
-        d3.select("#message").text(msg).style("color", low.length?"var(--red)":"var(--blue)");
+        const msg = low.length
+          ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — consult your pediatrician.`
+          : `All vaccines ≥ 95%. Thank you for protecting our community!`;
+
+        d3.select("#message")
+          .text(msg)
+          .style("color", low.length ? "var(--red)" : "var(--blue)");
       }
     }).catch(err=>{
       console.error(err);
