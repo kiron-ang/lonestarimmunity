@@ -73,32 +73,32 @@
   <script>
     // Create tooltip container
     const tooltip = d3.select("body")
-      .append("div")
-        .attr("id", "tooltip");
+    .append("div")
+    .attr("id", "tooltip");
 
     const svg = d3.select("#chart"),
-          margin = { top: 40, right: 30, bottom: 120, left: 70 },
-          width = svg.node().clientWidth - margin.left - margin.right,
-          height = svg.node().clientHeight - margin.top - margin.bottom,
-          g = svg.attr("viewBox", `0 0 ${width+margin.left+margin.right} ${height+margin.top+margin.bottom+40}`)
-                 .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    margin = { top: 40, right: 30, bottom: 120, left: 70 },
+    width = svg.node().clientWidth - margin.left - margin.right,
+    height = svg.node().clientHeight - margin.top - margin.bottom,
+    g = svg.attr("viewBox", `0 0 ${width+margin.left+margin.right} ${height+margin.top+margin.bottom+40}`)
+    .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     const x = d3.scaleBand().padding(0.2).range([0, width]),
-          y = d3.scaleLinear().range([height, 0]);
+    y = d3.scaleLinear().range([height, 0]);
 
     const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${height})`);
     const yAxisG = g.append("g").attr("class","axis");
 
     g.append("line")
-      .attr("class","threshold-line")
-      .attr("x1",0).attr("x2",width)
-      .attr("y1", y(95)).attr("y2", y(95));
+    .attr("class","threshold-line")
+    .attr("x1",0).attr("x2",width)
+    .attr("y1", y(95)).attr("y2", y(95));
 
     g.append("text")
-      .attr("class","threshold-label")
-      .attr("x", width)
-      .attr("y", y(95) - 5)
-      .text("95% recommended");
+    .attr("class","threshold-label")
+    .attr("x", width)
+    .attr("y", y(95) - 5)
+    .text("95% recommended");
 
     d3.csv("data.csv", d => {
       for (let k in d) if (d[k].endsWith("%")) d[k] = +d[k].replace('%','');
@@ -117,13 +117,13 @@
         sugg.selectAll("li").remove();
         if (val) {
           sugg.selectAll("li").data(filtered.slice(0,10)).enter()
-            .append("li").text(d=>d)
-            .on("click", function(event, d) {
-              input.property("value", d);
-              sugg.selectAll("li").remove();
-              const row = data.find(r=>r["Facility Name"]===d);
-              if (row) updateAll(row);
-            });
+          .append("li").text(d=>d)
+          .on("click", function(event, d) {
+            input.property("value", d);
+            sugg.selectAll("li").remove();
+            const row = data.find(r=>r["Facility Name"]===d);
+            if (row) updateAll(row);
+          });
         }
       });
 
@@ -145,45 +145,45 @@
 
       function updateChart(district) {
         const chartData = vaccineCols.map(v=>({vaccine:v,value:district[v]}));
-        x.domain(chartData.map(d=>d.vaccine)); 
+        x.domain(chartData.map(d=>d.vaccine));
         y.domain([0,100]);
 
         xAxisG.call(d3.axisBottom(x))
-          .selectAll("text")
-          .attr("transform","rotate(-45)")
-          .style("text-anchor","end");
+        .selectAll("text")
+        .attr("transform","rotate(-45)")
+        .style("text-anchor","end");
 
         yAxisG.call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+"%"));
 
         const bars = g.selectAll(".bar").data(chartData, d=>d.vaccine);
 
         bars.join(
-          enter => enter.append("rect")
-                        .attr("class", d => d.value < 95 ? "bar low" : "bar")
-                        .attr("x", d => x(d.vaccine))
-                        .attr("y", y(0))
-                        .attr("width", x.bandwidth())
-                        .attr("height", 0)
-                        .call(e => e.transition().duration(700)
-                                     .attr("y", d => y(d.value))
-                                     .attr("height", d => height - y(d.value))),
-          update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
-                          .call(u => u.transition().duration(700)
-                                       .attr("x", d => x(d.vaccine))
-                                       .attr("y", d => y(d.value))
-                                       .attr("width", x.bandwidth())
-                                       .attr("height", d => height - y(d.value))),
-          exit => exit.remove()
+        enter => enter.append("rect")
+        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+        .attr("x", d => x(d.vaccine))
+        .attr("y", y(0))
+        .attr("width", x.bandwidth())
+        .attr("height", 0)
+        .call(e => e.transition().duration(700)
+        .attr("y", d => y(d.value))
+        .attr("height", d => height - y(d.value))),
+        update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
+        .call(u => u.transition().duration(700)
+        .attr("x", d => x(d.vaccine))
+        .attr("y", d => y(d.value))
+        .attr("width", x.bandwidth())
+        .attr("height", d => height - y(d.value))),
+        exit => exit.remove()
         )
         .on("mouseover", (event, d) => {
           tooltip
-            .style("opacity", 1)
-            .html(`${d.value}%`);
+          .style("opacity", 1)
+          .html(`${d.value.toFixed(2)}%`);
         })
         .on("mousemove", (event) => {
           tooltip
-            .style("left", (event.pageX + 10) + "px")
-            .style("top",  (event.pageY - 20) + "px");
+          .style("left", (event.pageX + 10) + "px")
+          .style("top",  (event.pageY - 20) + "px");
         })
         .on("mouseout", () => {
           tooltip.style("opacity", 0);
@@ -191,17 +191,17 @@
 
         const low = chartData.filter(d=>d.value<95);
         const msg = low.length
-          ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — consult your pediatrician.`
-          : `All vaccines ≥ 95%. Thank you for protecting our community!`;
+        ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — consult your pediatrician.`
+        : `All vaccines ≥ 95%. Thank you for protecting our community!`;
 
         d3.select("#message")
-          .text(msg)
-          .style("color", low.length ? "var(--red)" : "var(--blue)");
+        .text(msg)
+        .style("color", low.length ? "var(--red)" : "var(--blue)");
       }
     }).catch(err=>{
       console.error(err);
       d3.select("body").append("p").text("Error loading data.csv—make sure it sits next to index.html.")
-        .style("color","var(--red)").style("text-align","center").style("padding","1rem");
+      .style("color","var(--red)").style("text-align","center").style("padding","1rem");
     });
   </script>
 </body>
