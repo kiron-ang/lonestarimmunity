@@ -52,15 +52,21 @@
       white-space: nowrap;
       z-index: 1000;
     }
+
+    #district-input::placeholder {
+      color: var(--blue);
+      opacity: 1;
+    }
+
   </style>
 </head>
 <body>
   <header>
     <h1>Lone Star Immunity</h1>
-    <p>Type to search districts &amp; view vaccination coverage</p>
+    <p>This website creates bar charts with Texas data from the 2023-2024 school year. Type in a school district to learn the vaccination coverage for seventh graders in the district. The data used for this website was released by the Texas Department of State Health Services at https://www.dshs.texas.gov/immunizations/data/school/coverage. For more information on how this website was made, please see https://github.com/kiron-ang/lonestarimmunity. </p>
   </header>
   <div id="controls">
-    <input type="text" id="district-input" placeholder="Start typing district name..." autocomplete="off" />
+    <input type="text" id="district-input" placeholder="Type in a district name here!" autocomplete="off" />
     <ul id="suggestions"></ul>
     <div id="info-panel" class="info-card">
       <span class="label">Select a district to see details.</span>
@@ -127,8 +133,8 @@
         }
       });
 
-      // Initialize with first district
-      updateAll(data[0]);
+      // Initialize with MCALLEN ISD
+      updateAll(data[823]);
 
       function updateAll(row) {
         updateInfoPanel(row);
@@ -191,8 +197,8 @@
 
         const low = chartData.filter(d=>d.value<95);
         const msg = low.length
-        ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — consult your pediatrician.`
-        : `All vaccines ≥ 95%. Thank you for protecting our community!`;
+        ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — talk to your your pediatrician.`
+        : `All vaccines ≥ 95%. Thank you for protecting your community!`;
 
         d3.select("#message")
         .text(msg)
