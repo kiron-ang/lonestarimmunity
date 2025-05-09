@@ -7,37 +7,42 @@
   <meta name="author" content="Kiron Ang" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    :root { --blue: #0056a9; --white: #ffffff; --red: #d90d0d; }
+    :root { --blue: #0056a9; --white: #ffffff; --red: #d90d0d; --gray: #ccc; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { display: flex; flex-direction: column; height: 100vh; font-family: "Segoe UI", Arial, sans-serif; background: var(--white); color: var(--blue); }
+    body { display: flex; flex-direction: column; min-height: 100vh; font-family: "Segoe UI", Arial, sans-serif; background: var(--white); color: var(--blue); }
     header, footer { text-align: center; padding: 1rem; background: var(--white); }
     header h1 { font-size: 2rem; color: var(--blue); }
     header p { margin-top: .5rem; }
+    header p a { color: var(--blue); text-decoration: underline; }
     footer p { font-size: .8rem; }
 
-    #controls { padding: 1rem; background: var(--white); display: flex; flex-direction: column; align-items: center; gap: 1rem; position: relative; }
-    #district-input { width: 80%; max-width: 400px; padding: .5rem; font-size: 1rem; border: 2px solid var(--blue); border-radius: 4px; }
+    #controls { padding: 1rem; background: var(--white); display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; }
+    #district-input { width: 90%; max-width: 400px; padding: .5rem; font-size: 1rem; border: 2px solid var(--blue); border-radius: 4px; color: var(--blue); }
     #district-input:focus {
       outline: none;
       border-color: var(--blue);
       box-shadow: 0 0 0 3px rgba(0, 86, 169, 0.3);
     }
-    #suggestions { list-style: none; position: absolute; top: 3.5rem; width: 80%; max-width: 400px; background: var(--white); border: 1px solid var(--blue); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 10; }
+    #suggestions { list-style: none; width: 90%; max-width: 400px; background: var(--white); border: 1px solid var(--blue); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 10; position: relative; }
     #suggestions li { padding: .5rem; cursor: pointer; }
-    #suggestions li:hover { background: var(--blue); color: var(--white); }
+    #suggestions li:hover, #suggestions li.active { background: var(--blue); color: var(--white); }
 
-    .info-card { width: 80%; max-width: 400px; background: var(--white); border-left: 4px solid var(--blue); box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 1rem; text-align: left; font-size: .95rem; }
+    .info-card { width: 90%; max-width: 400px; background: var(--white); border-left: 4px solid var(--blue); box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 1rem; text-align: left; font-size: .95rem; }
     .info-card .label { font-weight: bold; color: var(--red); }
-    #chart { flex-grow: 1; width: 100%; height: 100%; }
+    #chart-container { width: 100%; overflow-x: auto; }
+    #chart { width: 100%; height: 500px; }
     .bar { fill: var(--blue); }
     .bar.low { fill: var(--red); }
-    .axis path, .axis line { stroke: var(--blue); }
+    .axis path, .axis line { stroke: var(--gray); }
     .axis text { fill: var(--blue); font-size: .9rem; }
+    .legend { font-size: .9rem; margin: 1rem; display: flex; gap: 1rem; justify-content: center; align-items: center; }
+    .legend-item { display: flex; align-items: center; gap: .3rem; }
+    .legend-box { width: 15px; height: 15px; display: inline-block; }
+
     .threshold-line { stroke: var(--red); stroke-dasharray: 4 4; stroke-width: 2px; }
-    .threshold-label { fill: var(--red); font-size: .9rem; text-anchor: end; }
+    .threshold-label { fill: var(--red); font-size: .9rem; text-anchor: start; }
     #message { text-align: center; padding: .75rem; font-size: 1rem; }
 
-    /* Tooltip styling */
     #tooltip {
       position: absolute;
       pointer-events: none;
@@ -53,17 +58,15 @@
       z-index: 1000;
     }
 
-    #district-input::placeholder {
-      color: var(--blue);
-      opacity: 1;
+    @media (max-width: 600px) {
+      #chart { height: 300px; }
     }
-
   </style>
 </head>
 <body>
   <header>
     <h1>Lone Star Immunity</h1>
-    <p>This website creates bar charts with Texas data from the 2023-2024 school year. Type in a school district to learn the vaccination coverage for seventh graders in the district. The data used for this website was released by the Texas Department of State Health Services at https://www.dshs.texas.gov/immunizations/data/school/coverage. For more information on how this website was made, please see https://github.com/kiron-ang/lonestarimmunity. </p>
+    <p>This website creates bar charts with Texas data from the 2023–2024 school year. Type in a school district to learn the vaccination coverage for seventh graders. Data source: <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Texas DSHS</a>. See project on <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">GitHub</a>.</p>
   </header>
   <div id="controls">
     <input type="text" id="district-input" placeholder="Type in a district name here!" autocomplete="off" />
@@ -72,39 +75,30 @@
       <span class="label">Select a district to see details.</span>
     </div>
   </div>
-  <svg id="chart"></svg>
+  <div class="legend">
+    <div class="legend-item"><span class="legend-box" style="background: var(--blue);"></span> ≥95%</div>
+    <div class="legend-item"><span class="legend-box" style="background: var(--red);"></span> &lt;95%</div>
+  </div>
+  <div id="chart-container">
+    <svg id="chart"></svg>
+  </div>
   <div id="message"></div>
   <footer><p>© Kiron Ang</p></footer>
 
   <script>
-    // Create tooltip container
-    const tooltip = d3.select("body")
-    .append("div")
-    .attr("id", "tooltip");
-
+    const tooltip = d3.select("body").append("div").attr("id", "tooltip");
     const svg = d3.select("#chart"),
-    margin = { top: 40, right: 30, bottom: 120, left: 70 },
+    margin = { top: 20, right: 30, bottom: 40, left: 150 },
     width = svg.node().clientWidth - margin.left - margin.right,
     height = svg.node().clientHeight - margin.top - margin.bottom,
-    g = svg.attr("viewBox", `0 0 ${width+margin.left+margin.right} ${height+margin.top+margin.bottom+40}`)
-    .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    g = svg.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+      .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleBand().padding(0.2).range([0, width]),
-    y = d3.scaleLinear().range([height, 0]);
+    const y = d3.scaleBand().padding(0.2).range([0, height]),
+          x = d3.scaleLinear().range([0, width]);
 
     const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${height})`);
     const yAxisG = g.append("g").attr("class","axis");
-
-    g.append("line")
-    .attr("class","threshold-line")
-    .attr("x1",0).attr("x2",width)
-    .attr("y1", y(95)).attr("y2", y(95));
-
-    g.append("text")
-    .attr("class","threshold-label")
-    .attr("x", width)
-    .attr("y", y(95) - 5)
-    .text("95% recommended");
 
     d3.csv("data.csv", d => {
       for (let k in d) if (d[k].endsWith("%")) d[k] = +d[k].replace('%','');
@@ -112,29 +106,45 @@
       return d;
     }).then(data => {
       const vaccineCols = data.columns.slice(5);
-      const names = [...new Set(data.map(d=>d["Facility Name"]))];
+      const names = [...new Set(data.map(d => d["Facility Name"]))];
       const input = d3.select("#district-input");
       const sugg = d3.select("#suggestions");
+      let activeIndex = -1;
 
-      // Filter suggestions as user types
-      input.on("input", function() {
+      input.on("input", function(e) {
         const val = this.value.toUpperCase();
         const filtered = names.filter(n => n.includes(val));
         sugg.selectAll("li").remove();
+        activeIndex = -1;
         if (val) {
           sugg.selectAll("li").data(filtered.slice(0,10)).enter()
-          .append("li").text(d=>d)
-          .on("click", function(event, d) {
-            input.property("value", d);
-            sugg.selectAll("li").remove();
-            const row = data.find(r=>r["Facility Name"]===d);
-            if (row) updateAll(row);
-          });
+            .append("li").text(d => d)
+            .on("click", function(event, d) {
+              input.property("value", d);
+              sugg.selectAll("li").remove();
+              const row = data.find(r => r["Facility Name"] === d);
+              if (row) updateAll(row);
+            });
         }
       });
 
-      // Initialize with MCALLEN ISD
-      updateAll(data[823]);
+      input.on("keydown", function(e) {
+        const items = sugg.selectAll("li").nodes();
+        if (e.key === "ArrowDown") { activeIndex = (activeIndex + 1) % items.length; highlight(); }
+        else if (e.key === "ArrowUp") { activeIndex = (activeIndex - 1 + items.length) % items.length; highlight(); }
+        else if (e.key === "Enter" && activeIndex >= 0) {
+          const d = items[activeIndex].textContent;
+          input.property("value", d);
+          sugg.selectAll("li").remove();
+          const row = data.find(r => r["Facility Name"] === d);
+          if (row) updateAll(row);
+        }
+        function highlight() {
+          items.forEach((item, i) => item.classList.toggle("active", i === activeIndex));
+        }
+      });
+
+      updateAll(data[823]); // initialize with MCALLEN ISD
 
       function updateAll(row) {
         updateInfoPanel(row);
@@ -146,68 +156,57 @@
           <div><span class="label">District:</span> ${d["Facility Name"]}</div>
           <div><span class="label">County:</span> ${d.County}</div>
           <div><span class="label">Type:</span> ${d["School Type"]}</div>
+          <div><span class="label">Note:</span> Texas recommends ≥95% coverage to maintain herd immunity.</div>
         `);
       }
 
       function updateChart(district) {
-        const chartData = vaccineCols.map(v=>({vaccine:v,value:district[v]}));
-        x.domain(chartData.map(d=>d.vaccine));
-        y.domain([0,100]);
+        const chartData = vaccineCols.map(v => ({ vaccine: v, value: district[v] }));
+        y.domain(chartData.map(d => d.vaccine));
+        x.domain([0, 100]);
 
-        xAxisG.call(d3.axisBottom(x))
-        .selectAll("text")
-        .attr("transform","rotate(-45)")
-        .style("text-anchor","end");
+        xAxisG.call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
+        yAxisG.call(d3.axisLeft(y));
 
-        yAxisG.call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+"%"));
-
-        const bars = g.selectAll(".bar").data(chartData, d=>d.vaccine);
+        const bars = g.selectAll(".bar").data(chartData, d => d.vaccine);
 
         bars.join(
-        enter => enter.append("rect")
-        .attr("class", d => d.value < 95 ? "bar low" : "bar")
-        .attr("x", d => x(d.vaccine))
-        .attr("y", y(0))
-        .attr("width", x.bandwidth())
-        .attr("height", 0)
-        .call(e => e.transition().duration(700)
-        .attr("y", d => y(d.value))
-        .attr("height", d => height - y(d.value))),
-        update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
-        .call(u => u.transition().duration(700)
-        .attr("x", d => x(d.vaccine))
-        .attr("y", d => y(d.value))
-        .attr("width", x.bandwidth())
-        .attr("height", d => height - y(d.value))),
-        exit => exit.remove()
-        )
-        .on("mouseover", (event, d) => {
-          tooltip
-          .style("opacity", 1)
-          .html(`${d.value.toFixed(2)}%`);
-        })
-        .on("mousemove", (event) => {
-          tooltip
-          .style("left", (event.pageX + 10) + "px")
-          .style("top",  (event.pageY - 20) + "px");
-        })
-        .on("mouseout", () => {
+          enter => enter.append("rect")
+            .attr("class", d => d.value < 95 ? "bar low" : "bar")
+            .attr("x", x(0))
+            .attr("y", d => y(d.vaccine))
+            .attr("height", y.bandwidth())
+            .attr("width", 0)
+            .call(e => e.transition().duration(700)
+              .attr("width", d => x(d.value))
+            ),
+          update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
+            .call(u => u.transition().duration(700)
+              .attr("y", d => y(d.vaccine))
+              .attr("height", y.bandwidth())
+              .attr("x", x(0))
+              .attr("width", d => x(d.value))
+            ),
+          exit => exit.remove()
+        ).on("mouseover", (event, d) => {
+          tooltip.style("opacity", 1).html(`${d.value.toFixed(2)}%`);
+        }).on("mousemove", (event) => {
+          tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 20) + "px");
+        }).on("mouseout", () => {
           tooltip.style("opacity", 0);
         });
 
-        const low = chartData.filter(d=>d.value<95);
+        const low = chartData.filter(d => d.value < 95);
         const msg = low.length
-        ? `Below 95%: ${low.map(d=>d.vaccine).join(", ")} — talk to your your pediatrician.`
-        : `All vaccines ≥ 95%. Thank you for protecting your community!`;
+          ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
+          : `All vaccines ≥ 95%. Thank you for protecting your community!`;
 
-        d3.select("#message")
-        .text(msg)
-        .style("color", low.length ? "var(--red)" : "var(--blue)");
+        d3.select("#message").text(msg).style("color", low.length ? "var(--red)" : "var(--blue)");
       }
-    }).catch(err=>{
+    }).catch(err => {
       console.error(err);
       d3.select("body").append("p").text("Error loading data.csv—make sure it sits next to index.html.")
-      .style("color","var(--red)").style("text-align","center").style("padding","1rem");
+        .style("color","var(--red)").style("text-align","center").style("padding","1rem");
     });
   </script>
 </body>
