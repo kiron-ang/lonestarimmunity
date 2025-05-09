@@ -12,10 +12,10 @@
     body { display: flex; flex-direction: column; min-height: 100vh; font-family: "Segoe UI", Arial, sans-serif; background: var(--white); color: var(--blue); }
     header, footer { text-align: center; padding: 1rem; background: var(--white); }
     header h1 { font-size: 2rem; color: var(--blue); }
-    header p { margin-top: .5rem; margin-right: 20rem; margin-left: 20rem;}
+    header p { margin: 0 auto; margin-top: 0.5rem; max-width: 800px; padding: 0 1rem; }
     header p a { color: var(--blue); text-decoration: underline; }
     footer p { font-size: .8rem; }
-
+    
     #controls { padding: 1rem; background: var(--white); display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; }
     #district-input { width: 90%; max-width: 400px; padding: .5rem; font-size: 1rem; border: 2px solid var(--blue); border-radius: 4px; color: var(--blue); }
     #district-input:focus {
@@ -26,7 +26,7 @@
     #suggestions { list-style: none; width: 90%; max-width: 400px; background: var(--white); border: 1px solid var(--blue); border-radius: 4px; max-height: 200px; overflow-y: auto; z-index: 10; position: relative; }
     #suggestions li { padding: .5rem; cursor: pointer; }
     #suggestions li:hover, #suggestions li.active { background: var(--blue); color: var(--white); }
-
+    
     .info-card { width: 90%; max-width: 400px; background: var(--white); border-left: 4px solid var(--blue); box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 1rem; text-align: left; font-size: .95rem; }
     .info-card .label { font-weight: bold; color: var(--red); }
     #chart-container { width: 100%; overflow-x: auto; }
@@ -38,11 +38,11 @@
     .legend { font-size: .9rem; margin: 1rem; display: flex; gap: 1rem; justify-content: center; align-items: center; }
     .legend-item { display: flex; align-items: center; gap: .3rem; }
     .legend-box { width: 15px; height: 15px; display: inline-block; }
-
+    
     .threshold-line { stroke: var(--red); stroke-dasharray: 4 4; stroke-width: 2px; }
     .threshold-label { fill: var(--red); font-size: .9rem; text-anchor: start; }
     #message { text-align: center; padding: .75rem; font-size: 1rem; }
-
+    
     #tooltip {
       position: absolute;
       pointer-events: none;
@@ -57,7 +57,7 @@
       white-space: nowrap;
       z-index: 1000;
     }
-
+    
     @media (max-width: 600px) {
       #chart { height: 300px; }
     }
@@ -84,7 +84,7 @@
   </div>
   <div id="message"></div>
   <footer><p>© Kiron Ang</p></footer>
-
+  
   <script>
     const tooltip = d3.select("body").append("div").attr("id", "tooltip");
     const svg = d3.select("#chart"),
@@ -93,13 +93,13 @@
     height = svg.node().clientHeight - margin.top - margin.bottom,
     g = svg.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
     .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
+    
     const y = d3.scaleBand().padding(0.2).range([0, height]),
     x = d3.scaleLinear().range([0, width]);
-
+    
     const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${height})`);
     const yAxisG = g.append("g").attr("class","axis");
-
+    
     d3.csv("data.csv", d => {
       for (let k in d) if (d[k].endsWith("%")) d[k] = +d[k].replace('%','');
       d["Facility Name"] = d["Facility Name"].toUpperCase();
@@ -110,7 +110,7 @@
       const input = d3.select("#district-input");
       const sugg = d3.select("#suggestions");
       let activeIndex = -1;
-
+      
       input.on("input", function(e) {
         const val = this.value.toUpperCase();
         const filtered = names.filter(n => n.includes(val));
@@ -127,7 +127,7 @@
           });
         }
       });
-
+      
       input.on("keydown", function(e) {
         const items = sugg.selectAll("li").nodes();
         if (e.key === "ArrowDown") { activeIndex = (activeIndex + 1) % items.length; highlight(); }
@@ -143,14 +143,14 @@
           items.forEach((item, i) => item.classList.toggle("active", i === activeIndex));
         }
       });
-
+      
       updateAll(data[823]); // initialize with MCALLEN ISD
-
+      
       function updateAll(row) {
         updateInfoPanel(row);
         updateChart(row);
       }
-
+      
       function updateInfoPanel(d) {
         d3.select("#info-panel").html(`
           <div><span class="label">District:</span> ${d["Facility Name"]}</div>
@@ -159,17 +159,17 @@
           <div><span class="label">Note:</span> Texas recommends ≥95% coverage to maintain herd immunity.</div>
         `);
       }
-
+      
       function updateChart(district) {
         const chartData = vaccineCols.map(v => ({ vaccine: v, value: district[v] }));
         y.domain(chartData.map(d => d.vaccine));
         x.domain([0, 100]);
-
+        
         xAxisG.call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
         yAxisG.call(d3.axisLeft(y));
-
+        
         const bars = g.selectAll(".bar").data(chartData, d => d.vaccine);
-
+        
         bars.join(
         enter => enter.append("rect")
         .attr("class", d => d.value < 95 ? "bar low" : "bar")
@@ -195,12 +195,12 @@
         }).on("mouseout", () => {
           tooltip.style("opacity", 0);
         });
-
+        
         const low = chartData.filter(d => d.value < 95);
         const msg = low.length
         ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
         : `All vaccines ≥ 95%. Thank you for protecting your community!`;
-
+        
         d3.select("#message").text(msg).style("color", low.length ? "var(--red)" : "var(--blue)");
       }
     }).catch(err => {
