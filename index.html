@@ -66,7 +66,7 @@
 <body>
   <header>
     <h1>Lone Star Immunity</h1>
-    <p>This website creates bar charts with Texas data from the 2023–2024 school year. Type in a school district to learn the vaccination coverage for seventh graders. Data source: <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Texas DSHS</a>. See project on <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">GitHub</a>.</p>
+    <p>This website creates bar charts with <strong>Texas data from the 2023–2024 school year</strong>. Type in a school district to learn their vaccination coverage for seventh graders. Click here for the data source: <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Texas Department of State Health Services</a>. Click here for this website's code: <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">GitHub Repository</a>.</p>
   </header>
   <div id="controls">
     <input type="text" id="district-input" placeholder="Type in a district name here!" autocomplete="off" />
@@ -92,10 +92,10 @@
     width = svg.node().clientWidth - margin.left - margin.right,
     height = svg.node().clientHeight - margin.top - margin.bottom,
     g = svg.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
-      .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     const y = d3.scaleBand().padding(0.2).range([0, height]),
-          x = d3.scaleLinear().range([0, width]);
+    x = d3.scaleLinear().range([0, width]);
 
     const xAxisG = g.append("g").attr("class","axis").attr("transform",`translate(0,${height})`);
     const yAxisG = g.append("g").attr("class","axis");
@@ -118,13 +118,13 @@
         activeIndex = -1;
         if (val) {
           sugg.selectAll("li").data(filtered.slice(0,10)).enter()
-            .append("li").text(d => d)
-            .on("click", function(event, d) {
-              input.property("value", d);
-              sugg.selectAll("li").remove();
-              const row = data.find(r => r["Facility Name"] === d);
-              if (row) updateAll(row);
-            });
+          .append("li").text(d => d)
+          .on("click", function(event, d) {
+            input.property("value", d);
+            sugg.selectAll("li").remove();
+            const row = data.find(r => r["Facility Name"] === d);
+            if (row) updateAll(row);
+          });
         }
       });
 
@@ -171,23 +171,23 @@
         const bars = g.selectAll(".bar").data(chartData, d => d.vaccine);
 
         bars.join(
-          enter => enter.append("rect")
-            .attr("class", d => d.value < 95 ? "bar low" : "bar")
-            .attr("x", x(0))
-            .attr("y", d => y(d.vaccine))
-            .attr("height", y.bandwidth())
-            .attr("width", 0)
-            .call(e => e.transition().duration(700)
-              .attr("width", d => x(d.value))
-            ),
-          update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
-            .call(u => u.transition().duration(700)
-              .attr("y", d => y(d.vaccine))
-              .attr("height", y.bandwidth())
-              .attr("x", x(0))
-              .attr("width", d => x(d.value))
-            ),
-          exit => exit.remove()
+        enter => enter.append("rect")
+        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+        .attr("x", x(0))
+        .attr("y", d => y(d.vaccine))
+        .attr("height", y.bandwidth())
+        .attr("width", 0)
+        .call(e => e.transition().duration(700)
+        .attr("width", d => x(d.value))
+        ),
+        update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
+        .call(u => u.transition().duration(700)
+        .attr("y", d => y(d.vaccine))
+        .attr("height", y.bandwidth())
+        .attr("x", x(0))
+        .attr("width", d => x(d.value))
+        ),
+        exit => exit.remove()
         ).on("mouseover", (event, d) => {
           tooltip.style("opacity", 1).html(`${d.value.toFixed(2)}%`);
         }).on("mousemove", (event) => {
@@ -198,15 +198,15 @@
 
         const low = chartData.filter(d => d.value < 95);
         const msg = low.length
-          ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
-          : `All vaccines ≥ 95%. Thank you for protecting your community!`;
+        ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
+        : `All vaccines ≥ 95%. Thank you for protecting your community!`;
 
         d3.select("#message").text(msg).style("color", low.length ? "var(--red)" : "var(--blue)");
       }
     }).catch(err => {
       console.error(err);
       d3.select("body").append("p").text("Error loading data.csv—make sure it sits next to index.html.")
-        .style("color","var(--red)").style("text-align","center").style("padding","1rem");
+      .style("color","var(--red)").style("text-align","center").style("padding","1rem");
     });
   </script>
 </body>
