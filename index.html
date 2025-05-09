@@ -7,12 +7,12 @@
   <meta name="author" content="Kiron Ang" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    :root { --blue: #0056a9; --white: #ffffff; --red: #d90d0d; --gray: #ccc; }
+    :root { --blue: #0056a9; --white: #ffffff; --red: #d90d0d; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { display: flex; flex-direction: column; min-height: 100vh; font-family: "Segoe UI", Arial, sans-serif; background: var(--white); color: var(--blue); }
     header, footer { text-align: center; padding: 1rem; background: var(--white); }
     header h1 { font-size: 2rem; color: var(--blue); }
-    header p { margin-top: .5rem; }
+    header p { margin-top: .5rem; margin-right: .5rem;}
     header p a { color: var(--blue); text-decoration: underline; }
     footer p { font-size: .8rem; }
 
@@ -33,7 +33,7 @@
     #chart { width: 100%; height: 500px; }
     .bar { fill: var(--blue); }
     .bar.low { fill: var(--red); }
-    .axis path, .axis line { stroke: var(--gray); }
+    .axis path, .axis line { stroke: var(--blue); }
     .axis text { fill: var(--blue); font-size: .9rem; }
     .legend { font-size: .9rem; margin: 1rem; display: flex; gap: 1rem; justify-content: center; align-items: center; }
     .legend-item { display: flex; align-items: center; gap: .3rem; }
