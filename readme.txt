@@ -1,7 +1,7 @@
-Hi there!
+Click here to see the website: https://kiron-ang.github.io/lonestarimmunity
 
-"Lone Star Immunity" is an interactive web application. It allows you to view vaccination coverage among seventh graders in different school districts across Texas. Please contact me at kiron_ang1@baylor.edu if you have any questions!
+Click here to see the data: https://www.dshs.texas.gov/immunizations/data/school/coverage
 
-Sincerely,
+Click here to see the code: https://github.com/kiron-ang/lonestarimmunity
 
-Kiron Ang
+Click here to see the colors: https://www.txdot.gov/about/brand-guidelines/visual-identity/colors.html
