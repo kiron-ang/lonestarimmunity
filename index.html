@@ -70,13 +70,15 @@
       list-style: none;
       width: 90%;
       max-width: 400px;
-      border: 0px solid var(--blue);
       border-radius: 4px;
       max-height: 200px;
       overflow-y: auto;
       background: var(--white);
       position: relative;
       z-index: 10;
+    }
+    #suggestions:active {
+      border: 1px solid var(--blue);
     }
     #suggestions li {
       padding: 0.5rem;
@@ -167,11 +169,13 @@
 <body>
   <h1>Lone Star Immunity</h1>
   <p class="intro">
-    This website visualizes <strong>Texas school district vaccination data (2023–2024)</strong>.
-    Type a district name below to see seventh-grade vaccination coverage.
+    This website shows <strong>Texas school district vaccination data (2023–2024)</strong>.
+    Type a district name below to see <strong>seventh grade</strong> vaccination coverage.
+    Herd immunity keeps a community safe when 95% of people are vaccinated.
+    Unfortunately, Texas only releases data for seventh grade and kindergarten.
     <br />
-    <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Texas Health Data</a> |
-    <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">GitHub Code</a>
+    <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Data</a> |
+    <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">Code</a>
   </p>
   <div id="controls">
     <input type="text" id="district-input" autocomplete="off" />
@@ -260,7 +264,6 @@
           <div><span class="label">District:</span> ${d["Facility Name"]}</div>
           <div><span class="label">County:</span> ${d.County}</div>
           <div><span class="label">Type:</span> ${d["School Type"]}</div>
-          <div><span class="label">Note:</span> Texas recommends ≥95% coverage for herd immunity.</div>
         `);
       }
       function updateChart(district) {
