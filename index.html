@@ -1,23 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Basic page metadata -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lone Star Immunity | Data Visualization | Kiron Ang</title>
   <meta name="author" content="Kiron Ang" />
+
+  <!-- Favicon: blue star -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolygon points='12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9' fill='%230056a9'/%3E%3C/svg%3E" />
+
+  <!-- Include D3.js library -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- CSS styles -->
   <style>
+    /* Define CSS variables for colors */
     :root {
       --blue: #0056a9;
       --white: #ffffff;
       --red: #d90d0d;
     }
+
+    /* Reset box model and remove default margins */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
+    /* General body styles */
     body {
       display: flex;
       flex-direction: column;
@@ -27,25 +39,34 @@
       color: var(--blue);
       text-align: center;
     }
+
+    /* Page title */
     h1 {
       font-size: 2.2rem;
       margin: 1rem 0 0.5rem;
     }
+
+    /* Introduction section */
     .intro {
       max-width: 800px;
       margin: 0 auto 1rem;
       padding: 0 1rem;
       font-size: 1rem;
     }
+
     .intro a {
       color: var(--blue);
       text-decoration: underline;
     }
+
+    /* Footer styles */
     footer {
       margin-top: auto;
       padding: 1rem;
       font-size: 0.85rem;
     }
+
+    /* Input controls container */
     #controls {
       display: flex;
       flex-direction: column;
@@ -54,6 +75,8 @@
       padding: 0.5rem;
       width: 100%;
     }
+
+    /* Input field styles */
     #district-input {
       width: 90%;
       max-width: 400px;
@@ -63,9 +86,12 @@
       border: 2px solid var(--blue);
       border-radius: 4px;
     }
+
     #district-input:focus {
       outline: none;
     }
+
+    /* Autocomplete suggestions list */
     #suggestions {
       list-style: none;
       width: 90%;
@@ -77,18 +103,19 @@
       position: relative;
       z-index: 10;
     }
-    #suggestions:active {
-      border: 1px solid var(--blue);
-    }
+
     #suggestions li {
       padding: 0.5rem;
       cursor: pointer;
     }
+
     #suggestions li:hover,
     #suggestions li.active {
       background: var(--blue);
       color: var(--white);
     }
+
+    /* Info card styling */
     .info-card {
       width: 90%;
       max-width: 400px;
@@ -98,10 +125,13 @@
       text-align: left;
       font-size: 0.95rem;
     }
+
     .label {
       font-weight: bold;
       color: var(--red);
     }
+
+    /* Legend section */
     .legend {
       display: flex;
       justify-content: center;
@@ -109,43 +139,58 @@
       margin: 1rem;
       font-size: 0.9rem;
     }
+
     .legend-item {
       display: flex;
       align-items: center;
       gap: 0.3rem;
     }
+
     .legend-box {
       width: 15px;
       height: 15px;
       display: inline-block;
     }
+
+    /* Chart container */
     #chart-container {
       width: 80%;
       margin: 0 auto;
       overflow-x: auto;
     }
+
     #chart {
       width: 100%;
       height: 500px;
     }
+
+    /* Bar styles */
     .bar {
       fill: var(--blue);
     }
+
     .bar.low {
       fill: var(--red);
     }
+
+    /* Axis styles */
     .axis path,
     .axis line {
       stroke: var(--blue);
     }
+
     .axis text {
       fill: var(--blue);
       font-size: 0.9rem;
     }
+
+    /* Message area */
     #message {
       padding: 0.75rem;
       font-size: 1rem;
     }
+
+    /* Tooltip styles */
     #tooltip {
       position: absolute;
       pointer-events: none;
@@ -159,6 +204,8 @@
       white-space: nowrap;
       z-index: 1000;
     }
+
+    /* Responsive adjustments */
     @media (max-width: 600px) {
       #chart {
         height: 300px;
@@ -167,7 +214,10 @@
   </style>
 </head>
 <body>
+  <!-- Main title -->
   <h1>Lone Star Immunity</h1>
+
+  <!-- Introduction text with links -->
   <p class="intro">
     This website shows <strong>Texas school district vaccination data (2023–2024)</strong>.
     Type a district name below to see <strong>seventh grade</strong> vaccination coverage.
@@ -177,6 +227,8 @@
     <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Data</a> |
     <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">Code</a>
   </p>
+
+  <!-- User input and suggestions -->
   <div id="controls">
     <input type="text" id="district-input" autocomplete="off" />
     <ul id="suggestions"></ul>
@@ -184,63 +236,97 @@
       <span class="label">Please type and choose a district name to see more information!</span>
     </div>
   </div>
+
+  <!-- Color legend -->
   <div class="legend">
     <div class="legend-item"><span class="legend-box" style="background: var(--blue);"></span> ≥95%</div>
     <div class="legend-item"><span class="legend-box" style="background: var(--red);"></span> &lt;95%</div>
   </div>
+
+  <!-- Chart container -->
   <div id="chart-container">
     <svg id="chart"></svg>
   </div>
+
+  <!-- Message area for alerts -->
   <div id="message"></div>
+
+  <!-- Footer -->
   <footer>
     <p>© Kiron Ang</p>
   </footer>
+
+  <!-- JavaScript for interactive visualization -->
   <script>
+    // Create tooltip div (hidden by default)
     const tooltip = d3.select("body").append("div").attr("id", "tooltip");
+
+    // Select the SVG chart element
     const svg = d3.select("#chart");
+
+    // Define margins and calculate usable width/height
     const margin = { top: 20, right: 30, bottom: 40, left: 150 };
     const width = svg.node().clientWidth - margin.left - margin.right;
     const height = svg.node().clientHeight - margin.top - margin.bottom;
+
+    // Add group container with margin offsets
     const g = svg.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Define x (linear) and y (band) scales
     const y = d3.scaleBand().padding(0.2).range([0, height]);
     const x = d3.scaleLinear().range([0, width]);
+
+    // Append axis groups
     const xAxisG = g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`);
     const yAxisG = g.append("g").attr("class", "axis");
+
+    // Load CSV data
     d3.csv("data.csv", d => {
+      // Convert percentage strings to numbers
       Object.keys(d).forEach(k => {
         if (d[k].endsWith("%")) d[k] = +d[k].replace("%", "");
       });
+      // Standardize facility names for case-insensitive matching
       d["Facility Name"] = d["Facility Name"].toUpperCase();
       return d;
     }).then(data => {
+      // Extract vaccine columns
       const vaccineCols = data.columns.slice(5);
       const names = [...new Set(data.map(d => d["Facility Name"]))];
+
       const input = d3.select("#district-input");
       const sugg = d3.select("#suggestions");
       let activeIndex = -1;
+
+      // Handle input typing event
       input.on("input", function() {
         const val = this.value.toUpperCase();
         const filtered = names.filter(n => n.includes(val)).slice(0, 10);
+
         sugg.selectAll("li").remove();
         activeIndex = -1;
+
         if (val) {
           sugg.selectAll("li")
-          .data(filtered)
-          .enter()
-          .append("li")
-          .text(d => d)
-          .on("click", (_, d) => {
-            input.property("value", d);
-            sugg.selectAll("li").remove();
-            updateAll(data.find(r => r["Facility Name"] === d));
-          });
+            .data(filtered)
+            .enter()
+            .append("li")
+            .text(d => d)
+            .on("click", (_, d) => {
+              input.property("value", d);
+              sugg.selectAll("li").remove();
+              updateAll(data.find(r => r["Facility Name"] === d));
+            });
         }
       });
+
+      // Handle keyboard navigation (up/down/enter)
       input.on("keydown", e => {
         const items = sugg.selectAll("li").nodes();
         if (!items.length) return;
+
         if (e.key === "ArrowDown") activeIndex = (activeIndex + 1) % items.length;
         if (e.key === "ArrowUp") activeIndex = (activeIndex - 1 + items.length) % items.length;
         if (e.key === "Enter" && activeIndex >= 0) {
@@ -249,16 +335,23 @@
           sugg.selectAll("li").remove();
           updateAll(data.find(r => r["Facility Name"] === d));
         }
+
         items.forEach((item, i) => {
           item.classList.toggle("active", i === activeIndex);
           if (i === activeIndex) item.scrollIntoView({ block: "nearest" });
         });
       });
+
+      // Show default district (row 823)
       updateAll(data[823]);
+
+      // Main update function
       function updateAll(row) {
         updateInfoPanel(row);
         updateChart(row);
       }
+
+      // Update district info panel
       function updateInfoPanel(d) {
         d3.select("#info-panel").html(`
           <div><span class="label">District:</span> ${d["Facility Name"]}</div>
@@ -266,44 +359,51 @@
           <div><span class="label">Type:</span> ${d["School Type"]}</div>
         `);
       }
+
+      // Update the bar chart
       function updateChart(district) {
         const chartData = vaccineCols.map(v => ({ vaccine: v, value: district[v] }));
+
         y.domain(chartData.map(d => d.vaccine));
         x.domain([0, 100]);
+
         xAxisG.call(d3.axisBottom(x).ticks(5).tickFormat(d => d + "%"));
         yAxisG.call(d3.axisLeft(y));
+
         const bars = g.selectAll(".bar").data(chartData, d => d.vaccine);
+
         bars.join(
-        enter => enter.append("rect")
-        .attr("class", d => d.value < 95 ? "bar low" : "bar")
-        .attr("x", x(0))
-        .attr("y", d => y(d.vaccine))
-        .attr("height", y.bandwidth())
-        .attr("width", 0)
-        .call(e => e.transition().duration(700).attr("width", d => x(d.value))),
-        update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
-        .call(u => u.transition().duration(700)
-        .attr("y", d => y(d.vaccine))
-        .attr("height", y.bandwidth())
-        .attr("width", d => x(d.value))),
-        exit => exit.remove()
+          enter => enter.append("rect")
+            .attr("class", d => d.value < 95 ? "bar low" : "bar")
+            .attr("x", x(0))
+            .attr("y", d => y(d.vaccine))
+            .attr("height", y.bandwidth())
+            .attr("width", 0)
+            .call(e => e.transition().duration(700).attr("width", d => x(d.value))),
+          update => update.attr("class", d => d.value < 95 ? "bar low" : "bar")
+            .call(u => u.transition().duration(700)
+              .attr("y", d => y(d.vaccine))
+              .attr("height", y.bandwidth())
+              .attr("width", d => x(d.value))),
+          exit => exit.remove()
         )
         .on("mouseover", (event, d) => tooltip.style("opacity", 1).html(`${d.value.toFixed(2)}%`))
         .on("mousemove", event => tooltip.style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 20) + "px"))
+          .style("top", (event.pageY - 20) + "px"))
         .on("mouseout", () => tooltip.style("opacity", 0));
+
         const low = chartData.filter(d => d.value < 95);
         d3.select("#message")
-        .text(low.length ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
-        : `All vaccines ≥ 95%. Thank you for protecting your community!`)
-        .style("color", low.length ? "var(--red)" : "var(--blue)");
+          .text(low.length ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
+                           : `All vaccines ≥ 95%. Thank you for protecting your community!`)
+          .style("color", low.length ? "var(--red)" : "var(--blue)");
       }
     }).catch(err => {
       console.error(err);
       d3.select("body").append("p")
-      .text("Error loading data.csv — make sure it sits next to index.html.")
-      .style("color", "var(--red)")
-      .style("padding", "1rem");
+        .text("Error loading data.csv — make sure it sits next to index.html.")
+        .style("color", "var(--red)")
+        .style("padding", "1rem");
     });
   </script>
 </body>
