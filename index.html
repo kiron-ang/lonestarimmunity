@@ -34,27 +34,25 @@
       font-family: sans-serif;
     }
 
-    header,
     footer {
       text-align: center;
       padding: 1rem;
-      margin-bottom: 0rem;
       background: var(--white);
     }
 
-    header h1 {
+    h1 {
       font-size: 2rem;
       color: var(--blue);
     }
 
-    header p {
+    p {
       margin: 0 auto;
       margin-top: 0.5rem;
       max-width: 800px;
       padding: 0 1rem;
     }
 
-    header p a {
+    a {
       color: var(--blue);
       text-decoration: underline;
     }
@@ -219,17 +217,15 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>Lone Star Immunity</h1>
-    <p>
-      This website creates bar charts with <strong>Texas data from the 2023–2024 school year</strong>.
-      Type the name of a school district into the search bar below to learn their vaccination coverage for seventh graders.
-      Click here to see the data:
-      <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Texas Department of State Health Services</a>.
-      Click here to see the code:
-      <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">GitHub Repository</a>.
-    </p>
-  </header>
+  <h1>Lone Star Immunity</h1>
+  <p>
+    This website creates bar charts with <strong>Texas data from the 2023–2024 school year</strong>.
+    Type the name of a school district into the search bar below to learn their vaccination coverage for seventh graders.
+    Click here to see the data:
+    <a href="https://www.dshs.texas.gov/immunizations/data/school/coverage" target="_blank">Texas Department of State Health Services</a>.
+    Click here to see the code:
+    <a href="https://github.com/kiron-ang/lonestarimmunity" target="_blank">GitHub Repository</a>.
+  </p>
 
   <div id="controls">
     <input type="text" id="district-input" autocomplete="off" />
@@ -265,9 +261,9 @@
     const height = svg.node().clientHeight - margin.top - margin.bottom;
 
     const g = svg
-      .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const y = d3.scaleBand().padding(0.2).range([0, height]);
     const x = d3.scaleLinear().range([0, width]);
@@ -299,16 +295,16 @@
 
         if (val) {
           sugg.selectAll("li")
-            .data(filtered.slice(0, 10))
-            .enter()
-            .append("li")
-            .text(d => d)
-            .on("click", function(event, d) {
-              input.property("value", d);
-              sugg.selectAll("li").remove();
-              const row = data.find(r => r["Facility Name"] === d);
-              if (row) updateAll(row);
-            });
+          .data(filtered.slice(0, 10))
+          .enter()
+          .append("li")
+          .text(d => d)
+          .on("click", function(event, d) {
+            input.property("value", d);
+            sugg.selectAll("li").remove();
+            const row = data.find(r => r["Facility Name"] === d);
+            if (row) updateAll(row);
+          });
         }
       });
 
@@ -365,23 +361,23 @@
         const bars = g.selectAll(".bar").data(chartData, d => d.vaccine);
 
         bars.join(
-          enter => enter.append("rect")
-            .attr("class", d => d.value < 95 ? "bar low" : "bar")
-            .attr("x", x(0))
-            .attr("y", d => y(d.vaccine))
-            .attr("height", y.bandwidth())
-            .attr("width", 0)
-            .call(e => e.transition().duration(700).attr("width", d => x(d.value))),
+        enter => enter.append("rect")
+        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+        .attr("x", x(0))
+        .attr("y", d => y(d.vaccine))
+        .attr("height", y.bandwidth())
+        .attr("width", 0)
+        .call(e => e.transition().duration(700).attr("width", d => x(d.value))),
 
-          update => update
-            .attr("class", d => d.value < 95 ? "bar low" : "bar")
-            .call(u => u.transition().duration(700)
-              .attr("y", d => y(d.vaccine))
-              .attr("height", y.bandwidth())
-              .attr("x", x(0))
-              .attr("width", d => x(d.value))),
+        update => update
+        .attr("class", d => d.value < 95 ? "bar low" : "bar")
+        .call(u => u.transition().duration(700)
+        .attr("y", d => y(d.vaccine))
+        .attr("height", y.bandwidth())
+        .attr("x", x(0))
+        .attr("width", d => x(d.value))),
 
-          exit => exit.remove()
+        exit => exit.remove()
         )
         .on("mouseover", (event, d) => {
           tooltip.style("opacity", 1).html(`${d.value.toFixed(2)}%`);
@@ -395,21 +391,21 @@
 
         const low = chartData.filter(d => d.value < 95);
         const msg = low.length
-          ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
-          : `All vaccines ≥ 95%. Thank you for protecting your community!`;
+        ? `Below 95%: ${low.map(d => d.vaccine).join(", ")} — talk to your pediatrician.`
+        : `All vaccines ≥ 95%. Thank you for protecting your community!`;
 
         d3.select("#message")
-          .text(msg)
-          .style("color", low.length ? "var(--red)" : "var(--blue)");
+        .text(msg)
+        .style("color", low.length ? "var(--red)" : "var(--blue)");
       }
     }).catch(err => {
       console.error(err);
       d3.select("body")
-        .append("p")
-        .text("Error loading data.csv — make sure it sits next to index.html.")
-        .style("color", "var(--red)")
-        .style("text-align", "center")
-        .style("padding", "1rem");
+      .append("p")
+      .text("Error loading data.csv — make sure it sits next to index.html.")
+      .style("color", "var(--red)")
+      .style("text-align", "center")
+      .style("padding", "1rem");
     });
   </script>
 </body>
